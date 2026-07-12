@@ -37,13 +37,10 @@ model Party {
   /// "parking is on the street, ring the doorbell twice"). Independent
   /// from `notes` above.
   locationNote String?
-  /// Optional freeform note shown on Shared Purchases — e.g. "everyone
-  /// grills their own meat, just chip in for extras". Independent from
-  /// `shoppingNote` below even though the two tabs are closely related.
+  /// Optional freeform note shown on the merged Shopping List tab (v4:
+  /// Shared Purchases and Shopping List are one screen again) — e.g.
+  /// "everyone grills their own meat, just chip in for extras".
   note      String?
-  /// Optional freeform note shown on the Shopping List. Independent from
-  /// `note` above — every tab's note is its own field now, none shared.
-  shoppingNote String?
   /// Optional freeform note shown on Things People Bring — a separate note
   /// from `note` above since it's a different coordination context (e.g.
   /// "please bring your own plates/cups").

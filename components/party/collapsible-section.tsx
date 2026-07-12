@@ -17,7 +17,7 @@ export function CollapsibleSection({
   return (
     <details className="group rounded-xl border" open={defaultOpen}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
-        <span className="flex items-center gap-2 text-base font-semibold">
+        <span className="flex items-center gap-2 text-base font-semibold tracking-tight">
           <Icon className="size-4.5 text-primary" aria-hidden="true" />
           {title}
           {typeof count === "number" && (

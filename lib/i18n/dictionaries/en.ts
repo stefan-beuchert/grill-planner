@@ -25,9 +25,17 @@ export const en: Dictionary = {
     german: "DE",
     english: "EN",
   },
+  themeToggle: {
+    switchToLight: "Switch to light theme",
+    switchToDark: "Switch to dark theme",
+  },
   landing: {
     tagline:
       "Plan a BBQ with friends in a minute. No account needed — you get a link to share right after.",
+  },
+  partyWelcome: {
+    joinSubmit: "Join the party",
+    justLooking: "Just looking, skip for now",
   },
   createPartyForm: {
     titleLabel: "Party name",
@@ -57,7 +65,6 @@ export const en: Dictionary = {
     shareHint: "Anyone with this link can view and join the party.",
     loadingLocation: "Loading weather and map...",
     tabs: {
-      purchases: "Purchases",
       bringing: "Bringing",
       guests: "Guests",
       location: "Location",
@@ -82,7 +89,6 @@ export const en: Dictionary = {
     genericError: "Something went wrong.",
   },
   sharedPurchases: {
-    heading: "Shared Purchases",
     categories: {
       food: "Food",
       drink: "Drinks",
@@ -164,15 +170,10 @@ export const en: Dictionary = {
   },
   shoppingList: {
     heading: "Shopping list",
-    empty: "Nothing yet — it fills in as people add to Shared Purchases.",
     markPurchased: "Mark purchased",
     unmark: "Unmark",
     purchasedBy: (name: string) => `Purchased by ${name}`,
     onlyPurchaserCanUnmark: "Only the person who purchased this can unmark it.",
-    noteLabel: "Note",
-    addNote: "Add a note",
-    editNote: "Edit note",
-    notePlaceholder: "e.g. check both stores, the usual one is closed Sundays",
   },
   location: {
     weatherHeading: "Weather",

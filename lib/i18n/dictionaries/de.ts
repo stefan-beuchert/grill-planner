@@ -23,9 +23,17 @@ export const de = {
     german: "DE",
     english: "EN",
   },
+  themeToggle: {
+    switchToLight: "Helles Design",
+    switchToDark: "Dunkles Design",
+  },
   landing: {
     tagline:
       "Plane ein Grillfest mit Freunden in einer Minute. Kein Konto nötig — du bekommst danach einen Link zum Teilen.",
+  },
+  partyWelcome: {
+    joinSubmit: "Der Party beitreten",
+    justLooking: "Nur mal schauen, später beitreten",
   },
   createPartyForm: {
     titleLabel: "Name der Party",
@@ -55,7 +63,6 @@ export const de = {
     shareHint: "Jeder mit diesem Link kann die Party sehen und mitmachen.",
     loadingLocation: "Wetter und Karte werden geladen ...",
     tabs: {
-      purchases: "Einkauf",
       bringing: "Mitbringen",
       guests: "Gäste",
       location: "Ort",
@@ -80,7 +87,6 @@ export const de = {
     genericError: "Etwas ist schiefgelaufen.",
   },
   sharedPurchases: {
-    heading: "Gemeinsame Einkäufe",
     categories: {
       food: "Essen",
       drink: "Getränke",
@@ -164,15 +170,10 @@ export const de = {
   },
   shoppingList: {
     heading: "Einkaufsliste",
-    empty: "Noch nichts hier — sie füllt sich, sobald bei gemeinsamen Einkäufen etwas hinzugefügt wird.",
     markPurchased: "Als gekauft markieren",
     unmark: "Markierung aufheben",
     purchasedBy: (name: string) => `Gekauft von ${name}`,
     onlyPurchaserCanUnmark: "Nur die Person, die es gekauft hat, kann die Markierung aufheben.",
-    noteLabel: "Notiz",
-    addNote: "Notiz hinzufügen",
-    editNote: "Notiz bearbeiten",
-    notePlaceholder: "z. B. beide Läden checken, der übliche hat sonntags zu",
   },
   location: {
     weatherHeading: "Wetter",

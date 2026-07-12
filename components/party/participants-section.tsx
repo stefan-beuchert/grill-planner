@@ -1,21 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
-import { joinParty, updateParticipantName } from "@/lib/actions/participant";
+import { useJoinParty } from "@/lib/hooks/use-join-party";
+import { updateParticipantName } from "@/lib/actions/participant";
 import { adminRemoveGuest } from "@/lib/actions/admin";
-import { setStoredParticipant } from "@/lib/participant-storage";
-import {
-  participantNameSchema,
-  type ParticipantNameValues,
-} from "@/lib/validations/participant";
+import { NameForm } from "@/components/party/name-form";
 import { SectionHeading } from "@/components/party/section-heading";
 import { useI18n } from "@/lib/i18n/locale-context";
 
@@ -23,57 +16,6 @@ type Participant = {
   id: string;
   name: string;
 };
-
-function NameForm({
-  submitLabel,
-  defaultName,
-  onSubmit,
-}: {
-  submitLabel: string;
-  defaultName?: string;
-  onSubmit: (name: string) => Promise<{ success: boolean; error?: string }>;
-}) {
-  const { t } = useI18n();
-  const [serverError, setServerError] = useState<string | null>(null);
-  const schema = useMemo(() => participantNameSchema(t), [t]);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ParticipantNameValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { name: defaultName ?? "" },
-  });
-
-  async function handle(values: ParticipantNameValues) {
-    setServerError(null);
-    const result = await onSubmit(values.name);
-    if (!result.success) {
-      setServerError(result.error ?? t.participants.genericError);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit(handle)} className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <Input
-          placeholder={t.participants.joinPlaceholder}
-          autoComplete="off"
-          className="h-12 flex-1 text-base"
-          {...register("name")}
-        />
-        <Button type="submit" disabled={isSubmitting} className="h-12 text-base">
-          {submitLabel}
-        </Button>
-      </div>
-      {(errors.name || serverError) && (
-        <p className="text-sm text-destructive">
-          {errors.name?.message ?? serverError}
-        </p>
-      )}
-    </form>
-  );
-}
 
 export function ParticipantsSection({
   slug,
@@ -89,24 +31,12 @@ export function ParticipantsSection({
   const [editing, setEditing] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const stored = useStoredParticipant(slug);
+  const join = useJoinParty(slug);
 
   const me =
     stored && participants.find((p) => p.id === stored.participantId)
       ? participants.find((p) => p.id === stored.participantId)
       : null;
-
-  async function handleJoin(name: string) {
-    const result = await joinParty(slug, name);
-    if (result.success) {
-      setStoredParticipant(slug, {
-        participantId: result.participantId,
-        editToken: result.editToken,
-      });
-      router.refresh();
-      return { success: true };
-    }
-    return { success: false, error: result.error };
-  }
 
   async function handleRename(name: string) {
     if (!stored) return { success: false, error: t.common.joinFirst };
@@ -189,7 +119,7 @@ export function ParticipantsSection({
         />
       )}
 
-      {!me && <NameForm submitLabel={t.participants.joinSubmit} onSubmit={handleJoin} />}
+      {!me && <NameForm submitLabel={t.participants.joinSubmit} onSubmit={join} />}
     </div>
   );
 }

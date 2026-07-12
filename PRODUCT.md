@@ -1,4 +1,4 @@
-# Grill Planner — Product Vision (v2 shipped, v3 in planning)
+# Grill Planner — Product Vision (v4 in progress)
 
 Version 1 taught us something the original spec didn't anticipate: a BBQ has
 two fundamentally different kinds of "stuff" — things the group needs to buy
@@ -13,7 +13,7 @@ explicit and rebuilds Purchases/Drinks/Food around it.
 - The application is optimized for mobile usage.
 - Users should never need to scroll through long pages.
 - Each tab groups one closely related set of planning tasks (e.g. Location
-  bundles weather + map + driver coordination; Shared Purchases bundles
+  bundles weather + map + driver coordination; Shopping List bundles
   Food/Drinks/Other) — not necessarily one single atomic task.
 - The interface should be simple enough that someone can understand it
   without explanation.
@@ -22,15 +22,15 @@ explicit and rebuilds Purchases/Drinks/Food around it.
 
 ## Navigation
 
-The app keeps the same five-tab shape as v1 — merging Food and Drinks into
-one tab is what makes room for the new "Things People Bring" tab without
-growing the tab count:
+Four tabs (v4: down from five — Shared Purchases and Shopping List, which
+had become two near-identical views of the same items, are now one tab):
 
 1. **Guests** — participant list
-2. **Shared Purchases** — Food / Drinks / Other (collapsible sections)
+2. **Shopping List** — Food / Drinks / Other (collapsible sections), each
+   item showing its contributor breakdown *and* purchased/locked state in
+   one place
 3. **Things People Bring**
-4. **Shopping List**
-5. **Location** — weather + map + car sharing / driver coordination
+4. **Location** — weather + map + car sharing / driver coordination
 
 A persistent **party identity bar** stays visible above all five tabs:
 party title + date. It exists purely to stop the app from feeling generic
@@ -41,7 +41,7 @@ you're looking at.
 
 ## Core Concept: The Contribution Ledger
 
-This is the shared mechanic behind both Shared Purchases and Things People
+This is the shared mechanic behind both the Shopping List and Things People
 Bring, so it's worth defining once.
 
 - An **item** is a shared bucket with a name and a category (e.g. "Sausage" /
@@ -63,10 +63,13 @@ Bring, so it's worth defining once.
 
 ---
 
-## Shared Purchases
+## Shopping List
 
-Shared Purchases contains everything that needs to be bought collectively,
-using the Contribution Ledger above.
+The Shopping List is where everything that needs to be bought collectively
+lives, using the Contribution Ledger above. (v2/v3 split this across two
+tabs — "Shared Purchases" for the contributor breakdown, "Shopping List" for
+the buy-it aggregation. v4 merges them: the two views were of the same
+items, and having both no longer earned the extra tab.)
 
 It is divided into:
 
@@ -81,21 +84,10 @@ Items display:
 - name
 - total quantity
 - breakdown of contributors and their amounts
+- purchased/locked state, with a **mark purchased** action per item
 
-Only Shared Purchases items generate Shopping List entries.
-
-Each party has one optional, freely-editable **note** attached to Shared
-Purchases — plain text, set by whoever, visible to everyone. This exists for
-context that changes what "shared" even means for that party, e.g. "we're
-each grilling our own meat this time, only chip in for drinks/bread/sauces."
-It's informational only; it doesn't restrict what categories or items can be
-added. It's also shown on the **Shopping List**, since that's where it
-matters most — at the point of actually buying things.
-
-## Shopping List
-
-The Shopping List is the aggregated, buyer-facing view of Shared Purchases:
-one line per item, total quantity, no per-contributor detail.
+Only these items generate Shopping List entries — Things People Bring never
+does.
 
 - Any participant can mark an item as **purchased**.
 - Marking an item purchased **locks** it: no one can add, edit, or remove
@@ -104,13 +96,18 @@ one line per item, total quantity, no per-contributor detail.
   it's clear who to ask if something's missing or wrong.
 - Only the participant who marked an item purchased can **unmark** it.
   Nobody else can undo someone else's purchase — except via Admin Mode.
-- The Shopping List itself has no items of its own — it only ever reflects
-  Shared Purchases.
+
+Each party has one optional, freely-editable **note** attached to this tab —
+plain text, set by whoever, visible to everyone. This exists for context
+that changes what "shared" even means for that party, e.g. "we're each
+grilling our own meat this time, only chip in for drinks/bread/sauces." It's
+informational only; it doesn't restrict what categories or items can be
+added.
 
 ## Things People Bring
 
 Participants can register things they're bringing themselves, using the
-same Contribution Ledger mechanic as Shared Purchases — including pooling
+same Contribution Ledger mechanic as the Shopping List — including pooling
 (e.g. three people can each pledge "2 bags of ice," so the group sees "6
 bags of ice covered" without anyone shopping for it).
 
@@ -121,14 +118,14 @@ Examples:
 - Bluetooth Speaker
 - Ice
 
-Differences from Shared Purchases:
+Differences from the Shopping List:
 
-- These items **never** generate Shopping List entries.
+- These items **never** show up on the Shopping List.
 - There is no "purchased" state — nothing here is bought as a group, so
   there's nothing to lock.
 
-Like Shared Purchases, this tab has its own optional, freely-editable note
-(separate from the Shared Purchases one, since the two are different
+Like the Shopping List, this tab has its own optional, freely-editable note
+(separate from the Shopping List one, since the two are different
 coordination contexts) — e.g. "please bring your own plates and cups."
 
 ---
@@ -148,7 +145,7 @@ While in admin mode:
   any individual party.
 - **Unmark any purchased item**, even one purchased by someone else — the
   admin override for a stuck/locked item.
-- **Edit or remove any contribution** in Shared Purchases or Things People
+- **Edit or remove any contribution** on the Shopping List or Things People
   Bring, even one added by someone else — the fix for a wrong, orphaned, or
   unreachable contributor's pledge (e.g. someone drops out but can't update
   what they said they'd bring).
@@ -156,7 +153,7 @@ While in admin mode:
   was added by mistake.
 
 Everything else stays open exactly as described above: any participant can
-still add themselves as a guest, contribute to Shared Purchases or Things
+still add themselves as a guest, contribute to the Shopping List or Things
 People Bring, and mark Shopping List items purchased, without needing the
 passcode. Admin Mode exists purely as a correction/cleanup layer on top of
 that open model, not a gate on normal use.
@@ -218,11 +215,9 @@ non-streaming (output is short). Cheapest tier; upgrading to a stronger
 model later is a one-line change if judgment quality disappoints in
 practice.
 
-**Inputs:** guest list + ride status, Shared Purchases items (category,
-total, contributors, purchased state), Things People Bring items, both
-party notes, weather forecast, location, party title/date. The Shopping
-List is deliberately **not** a separate input — it's the same data as
-Shared Purchases, just re-presented, and would only bloat the prompt.
+**Inputs:** guest list + ride status, Shopping List items (category, total,
+contributors, purchased state), Things People Bring items, both party
+notes, weather forecast, location, party title/date.
 
 **Output shape:** two parts —
 

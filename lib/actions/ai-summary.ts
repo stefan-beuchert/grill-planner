@@ -22,7 +22,7 @@ const LANGUAGE_NAMES: Record<Locale, string> = {
   de: "German",
 };
 
-const SYSTEM_PROMPT = `You help summarize a private BBQ/grill party organized through the Grill Planner app. You'll be given structured data about one party: the guest list and ride status, what's being bought together (Shared Purchases), what people are bringing themselves, any organizer notes, the weather forecast, and the location.
+const SYSTEM_PROMPT = `You help summarize a private BBQ/grill party organized through the Grill Planner app. You'll be given structured data about one party: the guest list and ride status, what's being bought together (the Shopping List), what people are bringing themselves, any organizer notes, the weather forecast, and the location.
 
 Produce two things:
 
@@ -30,7 +30,7 @@ Produce two things:
 
 2. "openPoints": a list of specific, concrete coordination gaps worth addressing before the event. Check for:
    - Ride balance: are there enough free seats offered for everyone who needs a ride?
-   - Category coverage: does each Shared Purchases category (Food/Drinks/Other) have at least something in it, unless a note explains why not?
+   - Category coverage: does each Shopping List category (Food/Drinks/Other) have at least something in it, unless a note explains why not?
    - Quantity vs. headcount: does the total planned quantity of food/drinks look thin relative to how many guests are coming? Use rough judgment, not exact math.
    - Missing common BBQ essentials (a grill, fuel/charcoal, plates/cups) — only flag these if nothing already covers them and no note explains the omission.
    - Weather-relevant concerns: e.g. a high rain chance with no indoor backup mentioned anywhere.
@@ -86,8 +86,8 @@ function formatPartyContext(
   }
   lines.push("");
 
-  if (party.note) lines.push(`Shared Purchases note: "${party.note}"`);
-  lines.push("Shared Purchases:");
+  if (party.note) lines.push(`Shopping List note: "${party.note}"`);
+  lines.push("Shopping List:");
   for (const category of ["FOOD", "DRINK", "OTHER"] as const) {
     const items = sharedItems.filter((i) => i.category === category);
     lines.push(`  ${category}:`);

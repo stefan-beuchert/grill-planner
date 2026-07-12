@@ -1,25 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { SectionHeading } from "@/components/party/section-heading";
-import { ShoppingNote } from "@/components/party/shopping-note";
+import { ShoppingCart, UtensilsCrossed, Beer, Package } from "lucide-react";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
-import { setItemPurchased } from "@/lib/actions/item";
-import { adminUnmarkPurchased } from "@/lib/actions/admin";
+import { ContributionList, type ContributionItem } from "@/components/party/contribution-list";
+import { AddItemForm } from "@/components/party/add-item-form";
+import { CollapsibleSection } from "@/components/party/collapsible-section";
+import { SectionHeading } from "@/components/party/section-heading";
+import { SharedPurchasesNote } from "@/components/party/shared-purchases-note";
 import { useI18n } from "@/lib/i18n/locale-context";
+import { ItemCategory, ItemListType } from "@/lib/generated/prisma/enums";
 
-export type ShoppingItem = {
-  id: string;
-  name: string;
-  purchased: boolean;
-  purchasedByParticipantId: string | null;
-  purchasedByName: string | null;
-  total: number;
-};
+export type ShoppingListItem = ContributionItem & { category: ItemCategory };
 
 export function ShoppingListSection({
   slug,
@@ -28,101 +19,62 @@ export function ShoppingListSection({
   isAdmin = false,
 }: {
   slug: string;
-  items: ShoppingItem[];
+  items: ShoppingListItem[];
   note: string | null;
   isAdmin?: boolean;
 }) {
   const { t } = useI18n();
-  const router = useRouter();
   const stored = useStoredParticipant(slug);
-  const [pendingId, setPendingId] = useState<string | null>(null);
 
-  async function toggle(itemId: string, purchased: boolean) {
-    if (!stored) return;
-    setPendingId(itemId);
-    await setItemPurchased(slug, stored.participantId, stored.editToken, itemId, purchased);
-    setPendingId(null);
-    router.refresh();
-  }
+  const byCategory = {
+    FOOD: items.filter((i) => i.category === "FOOD"),
+    DRINK: items.filter((i) => i.category === "DRINK"),
+    OTHER: items.filter((i) => i.category === "OTHER"),
+  };
 
-  async function adminUnmark(itemId: string) {
-    setPendingId(itemId);
-    await adminUnmarkPurchased(slug, itemId);
-    setPendingId(null);
-    router.refresh();
-  }
+  const categories: { key: ItemCategory; icon: typeof UtensilsCrossed; label: string }[] = [
+    { key: "FOOD", icon: UtensilsCrossed, label: t.sharedPurchases.categories.food },
+    { key: "DRINK", icon: Beer, label: t.sharedPurchases.categories.drink },
+    { key: "OTHER", icon: Package, label: t.sharedPurchases.categories.other },
+  ];
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <SectionHeading icon={ShoppingCart}>{t.shoppingList.heading}</SectionHeading>
-      <ShoppingNote slug={slug} note={note} />
+      <SharedPurchasesNote slug={slug} note={note} />
 
-      {items.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{t.shoppingList.empty}</p>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {items.map((item) => {
-            const busy = pendingId === item.id;
-            const canUnmark = stored?.participantId === item.purchasedByParticipantId;
-            return (
-              <li
-                key={item.id}
-                className={cn(
-                  "flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5",
-                  item.purchased && "border-primary/30 bg-accent",
-                )}
-              >
-                <div className="flex flex-col">
-                  <span className="text-base">{item.name}</span>
-                  {item.purchased && item.purchasedByName && (
-                    <span className="text-muted-foreground text-xs">
-                      {t.shoppingList.purchasedBy(item.purchasedByName)}
-                    </span>
-                  )}
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-medium text-primary tabular-nums">
-                    × {item.total}
-                  </span>
-                  {stored && !item.purchased && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={busy}
-                      onClick={() => toggle(item.id, true)}
-                    >
-                      {t.shoppingList.markPurchased}
-                    </Button>
-                  )}
-                  {stored && item.purchased && canUnmark && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={busy}
-                      onClick={() => toggle(item.id, false)}
-                    >
-                      {t.shoppingList.unmark}
-                    </Button>
-                  )}
-                  {item.purchased && !canUnmark && isAdmin && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={busy}
-                      onClick={() => adminUnmark(item.id)}
-                    >
-                      {t.admin.adminUnmark}
-                    </Button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {categories.map(({ key, icon, label }) => {
+        const categoryItems = byCategory[key];
+        return (
+          <CollapsibleSection
+            key={key}
+            icon={icon}
+            title={label}
+            count={categoryItems.length}
+            defaultOpen={key === "FOOD"}
+          >
+            <ContributionList
+              slug={slug}
+              items={categoryItems}
+              emptyText={t.sharedPurchases.emptyCategory}
+              joinPrompt={t.sharedPurchases.joinPrompt}
+              isAdmin={isAdmin}
+              canMarkPurchased
+            />
+            {stored && (
+              <AddItemForm
+                slug={slug}
+                participantId={stored.participantId}
+                editToken={stored.editToken}
+                listType={ItemListType.SHARED_PURCHASE}
+                category={key}
+                placeholder={t.sharedPurchases.addPlaceholder}
+                submitLabel={t.sharedPurchases.addSubmit}
+              />
+            )}
+          </CollapsibleSection>
+        );
+      })}
     </div>
   );
 }

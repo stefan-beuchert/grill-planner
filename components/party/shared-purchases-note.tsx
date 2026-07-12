@@ -4,9 +4,8 @@ import { PartyNote } from "@/components/party/party-note";
 import { setPartyNote } from "@/lib/actions/party";
 import { useI18n } from "@/lib/i18n/locale-context";
 
-// Thin wrapper: the Shared Purchases note is used in two places (its own
-// tab and the Shopping List, per PRODUCT.md) with identical copy/save
-// wiring — defined once here instead of repeated at each call site.
+// The single note for the merged Shopping List tab (v4: Shared Purchases and
+// Shopping List are now one screen, so there's only one note field again).
 export function SharedPurchasesNote({ slug, note }: { slug: string; note: string | null }) {
   const { t } = useI18n();
 

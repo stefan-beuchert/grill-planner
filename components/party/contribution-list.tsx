@@ -6,14 +6,15 @@ import { Check, Lock, Minus, Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
-import { setContribution } from "@/lib/actions/item";
-import { adminRemoveContribution } from "@/lib/actions/admin";
+import { setContribution, setItemPurchased } from "@/lib/actions/item";
+import { adminRemoveContribution, adminUnmarkPurchased } from "@/lib/actions/admin";
 import { useI18n } from "@/lib/i18n/locale-context";
 
 export type ContributionItem = {
   id: string;
   name: string;
   purchased?: boolean;
+  purchasedByParticipantId?: string | null;
   purchasedByName?: string | null;
   contributions: { participantId: string; quantity: number; participantName: string }[];
 };
@@ -24,12 +25,14 @@ export function ContributionList({
   emptyText,
   joinPrompt,
   isAdmin = false,
+  canMarkPurchased = false,
 }: {
   slug: string;
   items: ContributionItem[];
   emptyText: string;
   joinPrompt: string;
   isAdmin?: boolean;
+  canMarkPurchased?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -80,6 +83,21 @@ export function ContributionList({
     router.refresh();
   }
 
+  async function togglePurchased(itemId: string, purchased: boolean) {
+    if (!stored) return;
+    setPendingId(itemId);
+    await setItemPurchased(slug, stored.participantId, stored.editToken, itemId, purchased);
+    setPendingId(null);
+    router.refresh();
+  }
+
+  async function adminUnmark(itemId: string) {
+    setPendingId(itemId);
+    await adminUnmarkPurchased(slug, itemId);
+    setPendingId(null);
+    router.refresh();
+  }
+
   return (
     <ul className="flex flex-col gap-2">
       {items.map((item) => {
@@ -91,14 +109,17 @@ export function ContributionList({
         const busy = pendingId === item.id;
         const locked = item.purchased === true;
         const editing = editingId === item.id;
+        const canUnmarkThis = stored?.participantId === item.purchasedByParticipantId;
+        const showPurchaseRow = canMarkPurchased && (locked || !!stored);
 
         return (
           <li
             key={item.id}
             className={cn(
               "flex flex-col gap-1.5 rounded-xl border px-3 py-2.5 transition-colors",
-              mine > 0 && "border-primary/30 bg-accent",
+              mine > 0 && !locked && "border-primary/30 bg-accent",
               editing && "border-primary bg-accent",
+              locked && "border-success/30 bg-success/10",
             )}
           >
             <div className="flex items-center justify-between gap-2">
@@ -147,11 +168,55 @@ export function ContributionList({
                 </span>
               ))}
             </div>
-            {locked && (
-              <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                <Lock className="size-3.5" aria-hidden="true" />
-                {item.purchasedByName ? t.shoppingList.purchasedBy(item.purchasedByName) : null}
-              </span>
+            {showPurchaseRow && (
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-success flex min-w-0 items-center gap-1 text-xs font-medium">
+                  {locked && (
+                    <>
+                      <Lock className="size-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">
+                        {item.purchasedByName ? t.shoppingList.purchasedBy(item.purchasedByName) : null}
+                      </span>
+                    </>
+                  )}
+                </span>
+                {!locked && stored && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => togglePurchased(item.id, true)}
+                    className="shrink-0"
+                  >
+                    {t.shoppingList.markPurchased}
+                  </Button>
+                )}
+                {locked && canUnmarkThis && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => togglePurchased(item.id, false)}
+                    className="shrink-0"
+                  >
+                    {t.shoppingList.unmark}
+                  </Button>
+                )}
+                {locked && !canUnmarkThis && isAdmin && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => adminUnmark(item.id)}
+                    className="shrink-0"
+                  >
+                    {t.admin.adminUnmark}
+                  </Button>
+                )}
+              </div>
             )}
             {editing && stored && (
               <div className="flex items-center justify-end gap-3">
