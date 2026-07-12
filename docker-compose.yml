@@ -9,6 +9,8 @@ services:
       # (see .env.example) and are set there as project env vars.
       DATABASE_URL: postgresql://postgres:postgres@db:5432/grillplanner
       DIRECT_URL: postgresql://postgres:postgres@db:5432/grillplanner
+      # Dev-only default. Production sets its own value as a Vercel env var.
+      ADMIN_PASSCODE: "1234"
     volumes:
       - .:/app
       - /app/node_modules

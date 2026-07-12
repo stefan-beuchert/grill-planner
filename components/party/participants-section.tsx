@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
 import { joinParty, updateParticipantName } from "@/lib/actions/participant";
+import { adminRemoveGuest } from "@/lib/actions/admin";
 import { setStoredParticipant } from "@/lib/participant-storage";
 import {
   participantNameSchema,
@@ -77,13 +78,16 @@ function NameForm({
 export function ParticipantsSection({
   slug,
   participants,
+  isAdmin = false,
 }: {
   slug: string;
   participants: Participant[];
+  isAdmin?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const stored = useStoredParticipant(slug);
 
   const me =
@@ -119,6 +123,14 @@ export function ParticipantsSection({
     return result;
   }
 
+  async function handleRemove(id: string, name: string) {
+    if (!window.confirm(t.admin.removeGuestConfirm(name))) return;
+    setPendingId(id);
+    await adminRemoveGuest(slug, id);
+    setPendingId(null);
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <SectionHeading icon={Users}>{t.participants.heading}</SectionHeading>
@@ -143,15 +155,27 @@ export function ParticipantsSection({
                   </span>
                 )}
               </span>
-              {me?.id === p.id && !editing && (
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  className="text-muted-foreground text-sm underline"
-                >
-                  {t.participants.rename}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {me?.id === p.id && !editing && (
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="text-muted-foreground text-sm underline"
+                  >
+                    {t.participants.rename}
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    disabled={pendingId === p.id}
+                    onClick={() => handleRemove(p.id, p.name)}
+                    className="text-destructive text-sm underline"
+                  >
+                    {t.admin.removeGuest}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

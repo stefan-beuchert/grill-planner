@@ -10,6 +10,17 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ItemListType {
+  SHARED_PURCHASE
+  BRING_YOUR_OWN
+}
+
+enum ItemCategory {
+  FOOD
+  DRINK
+  OTHER
+}
+
 /// A single grill party. `slug` is the unguessable public id used in the
 /// shareable URL — it is the only "authorization" a visitor needs.
 model Party {
@@ -19,12 +30,14 @@ model Party {
   startsAt  DateTime
   location  String
   notes     String?
+  /// Optional freeform note shown on Shared Purchases and the Shopping
+  /// List — e.g. "everyone grills their own meat, just chip in for extras".
+  note      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   participants Participant[]
-  foodItems    FoodItem[]
-  drinkItems   DrinkItem[]
+  items        Item[]
 
   @@map("parties")
 }
@@ -47,65 +60,55 @@ model Participant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  foodSelections  FoodSelection[]
-  drinkSelections DrinkSelection[]
+  contributions  Contribution[]
+  purchasedItems Item[]         @relation("PurchasedItems")
 
   @@index([partyId])
   @@map("participants")
 }
 
-/// A food item available to choose from for a party — either a default
-/// suggestion seeded at party creation, or added later by a participant.
-model FoodItem {
-  id        String   @id @default(cuid())
-  partyId   String
-  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  name      String
+/// A shared bucket — either something to buy together (listType
+/// SHARED_PURCHASE, with a Food/Drink/Other category) or something people
+/// are bringing themselves (BRING_YOUR_OWN, no category, never on the
+/// Shopping List). No one "owns" an item; it exists only while it has at
+/// least one Contribution, and is deleted once the last one is removed.
+model Item {
+  id       String        @id @default(cuid())
+  partyId  String
+  party    Party         @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  name     String
+  listType ItemListType
+  /// Only set (and meaningful) when listType is SHARED_PURCHASE.
+  category ItemCategory?
+
+  /// Shopping List purchase lock — only meaningful for SHARED_PURCHASE
+  /// items. While purchased, contributions can't be added, edited, or
+  /// removed; only purchasedBy (or an admin) can unmark it.
+  purchased                Boolean      @default(false)
+  purchasedByParticipantId String?
+  purchasedBy              Participant? @relation("PurchasedItems", fields: [purchasedByParticipantId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
 
-  selections FoodSelection[]
+  contributions Contribution[]
 
-  @@unique([partyId, name])
-  @@map("food_items")
+  @@unique([partyId, listType, name])
+  @@index([partyId])
+  @@map("items")
 }
 
-/// How much of a given food item a participant wants.
-model FoodSelection {
+/// One participant's pledged quantity toward an Item. An item's displayed
+/// total is the sum of its contributions; a participant can only edit or
+/// remove their own row, never someone else's.
+model Contribution {
   id            String      @id @default(cuid())
+  itemId        String
+  item          Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
   participantId String
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  foodItemId    String
-  foodItem      FoodItem    @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
-  quantity      Int         @default(1)
+  quantity      Int
 
-  @@unique([participantId, foodItemId])
-  @@map("food_selections")
-}
-
-/// A drink item available to choose from for a party — added by a
-/// participant. No defaults are seeded; the list starts empty.
-model DrinkItem {
-  id        String   @id @default(cuid())
-  partyId   String
-  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  name      String
-  createdAt DateTime @default(now())
-
-  selections DrinkSelection[]
-
-  @@unique([partyId, name])
-  @@map("drink_items")
-}
-
-/// How much of a given drink item a participant wants.
-model DrinkSelection {
-  id            String      @id @default(cuid())
-  participantId String
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  drinkItemId   String
-  drinkItem     DrinkItem   @relation(fields: [drinkItemId], references: [id], onDelete: Cascade)
-  quantity      Int         @default(1)
-
-  @@unique([participantId, drinkItemId])
-  @@map("drink_selections")
+  @@unique([itemId, participantId])
+  @@index([participantId])
+  @@map("contributions")
 }

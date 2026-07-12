@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   // shouldn't try to statically analyze — keep them as real Node deps at
   // runtime instead of bundling them.
   serverExternalPackages: ["@prisma/adapter-pg", "pg"],
+  // The dev-tools badge sits bottom-left, exactly over this app's bottom
+  // tab bar (mobile-first, tabs pinned to the bottom) — it physically
+  // blocks the leftmost tab while developing. Dev-only, no effect on prod.
+  devIndicators: false,
 };
 
 export default nextConfig;

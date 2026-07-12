@@ -1,10 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
 import { combineDateAndTimeUtc } from "@/lib/party-datetime";
+import { authorizeParticipant } from "@/lib/participant-auth";
 import { partyFormSchema, type PartyFormValues } from "@/lib/validations/party";
+import { partyNoteSchema } from "@/lib/validations/party-note";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -50,4 +53,31 @@ export async function createParty(values: PartyFormValues) {
   });
 
   redirect(`/party/${party.slug}`);
+}
+
+export async function setPartyNote(
+  slug: string,
+  participantId: string,
+  editToken: string,
+  note: string,
+) {
+  const t = dictionaries[await getLocale()];
+
+  const parsed = partyNoteSchema.safeParse({ note });
+  if (!parsed.success) {
+    return { success: false as const, error: t.common.invalidNote };
+  }
+
+  const participant = await authorizeParticipant(participantId, editToken);
+  if (!participant) {
+    return { success: false as const, error: t.common.joinFirst };
+  }
+
+  await prisma.party.update({
+    where: { id: participant.partyId },
+    data: { note: parsed.data.note || null },
+  });
+
+  revalidatePath(`/party/${slug}`);
+  return { success: true as const };
 }
