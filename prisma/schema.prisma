@@ -1,0 +1,101 @@
+// Prisma schema for Grill Planner.
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// A single grill party. `slug` is the unguessable public id used in the
+/// shareable URL — it is the only "authorization" a visitor needs.
+model Party {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  startsAt  DateTime
+  location  String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants Participant[]
+  foodItems    FoodItem[]
+
+  @@map("parties")
+}
+
+/// Someone who joined a party through the shared link. `editToken` is a
+/// second, non-guessable secret handed only to that participant's browser
+/// (never rendered for other participants) so they can edit their own entry
+/// without an account.
+model Participant {
+  id        String @id @default(cuid())
+  partyId   String
+  party     Party  @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  name      String
+  editToken String @unique @default(cuid())
+
+  isDriver  Boolean @default(false)
+  seatsFree Int?
+  needsRide Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  foodSelections  FoodSelection[]
+  drinkSelections DrinkSelection[]
+
+  @@index([partyId])
+  @@map("participants")
+}
+
+/// A food item available to choose from for a party — either a default
+/// suggestion seeded at party creation, or added later by a participant.
+model FoodItem {
+  id        String   @id @default(cuid())
+  partyId   String
+  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+
+  selections FoodSelection[]
+
+  @@unique([partyId, name])
+  @@map("food_items")
+}
+
+/// How much of a given food item a participant wants.
+model FoodSelection {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  foodItemId    String
+  foodItem      FoodItem    @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  quantity      Int         @default(1)
+
+  @@unique([participantId, foodItemId])
+  @@map("food_selections")
+}
+
+enum DrinkType {
+  BEER
+  SOFT_DRINK
+  WINE
+  OTHER
+}
+
+/// How much of a given drink type a participant is bringing/expecting.
+model DrinkSelection {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  type          DrinkType
+  quantity      Int         @default(1)
+
+  @@unique([participantId, type])
+  @@map("drink_selections")
+}
