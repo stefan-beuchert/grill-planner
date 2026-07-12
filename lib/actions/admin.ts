@@ -109,11 +109,12 @@ export async function adminRemoveGuest(slug: string, participantId: string) {
 
   await prisma.participant.delete({ where: { id: participantId } });
 
-  for (const itemId of contributedItemIds) {
-    const remaining = await prisma.contribution.count({ where: { itemId } });
-    if (remaining === 0) {
-      await prisma.item.delete({ where: { id: itemId } }).catch(() => {});
-    }
+  if (contributedItemIds.length > 0) {
+    // One query for all now-possibly-empty items, instead of a per-item
+    // count-then-maybe-delete round trip.
+    await prisma.item.deleteMany({
+      where: { id: { in: contributedItemIds }, contributions: { none: {} } },
+    });
   }
 
   revalidatePath(`/party/${slug}`);

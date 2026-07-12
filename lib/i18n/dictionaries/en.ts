@@ -16,6 +16,8 @@ export const en: Dictionary = {
     cancel: "Cancel",
     fewerAria: (name: string) => `Fewer ${name}`,
     moreAria: (name: string) => `More ${name}`,
+    editQuantityAria: (name: string) => `Edit quantity for ${name}`,
+    saveQuantityAria: (name: string) => `Save quantity for ${name}`,
   },
   localeToggle: {
     label: "Language",

@@ -6,11 +6,10 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SectionHeading } from "@/components/party/section-heading";
-import { PartyNote } from "@/components/party/party-note";
+import { SharedPurchasesNote } from "@/components/party/shared-purchases-note";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
 import { setItemPurchased } from "@/lib/actions/item";
 import { adminUnmarkPurchased } from "@/lib/actions/admin";
-import { setPartyNote } from "@/lib/actions/party";
 import { useI18n } from "@/lib/i18n/locale-context";
 
 export type ShoppingItem = {
@@ -56,15 +55,7 @@ export function ShoppingListSection({
   return (
     <div className="flex flex-col gap-3">
       <SectionHeading icon={ShoppingCart}>{t.shoppingList.heading}</SectionHeading>
-      <PartyNote
-        slug={slug}
-        note={note}
-        label={t.sharedPurchases.noteLabel}
-        addLabel={t.sharedPurchases.addNote}
-        editLabel={t.sharedPurchases.editNote}
-        placeholder={t.sharedPurchases.notePlaceholder}
-        save={setPartyNote}
-      />
+      <SharedPurchasesNote slug={slug} note={note} />
 
       {items.length === 0 ? (
         <p className="text-muted-foreground text-sm">{t.shoppingList.empty}</p>

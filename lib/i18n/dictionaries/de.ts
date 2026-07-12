@@ -14,6 +14,8 @@ export const de = {
     cancel: "Abbrechen",
     fewerAria: (name: string) => `Weniger ${name}`,
     moreAria: (name: string) => `Mehr ${name}`,
+    editQuantityAria: (name: string) => `Menge für ${name} bearbeiten`,
+    saveQuantityAria: (name: string) => `Menge für ${name} speichern`,
   },
   localeToggle: {
     label: "Sprache",
