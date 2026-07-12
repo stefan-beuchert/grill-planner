@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import {
   Beer,
   CalendarDays,
-  Car,
   Flame,
   MapPin,
   NotebookPen,
@@ -71,56 +70,55 @@ export default async function PartyPage({
     { value: "guests", label: t.partyPage.tabs.guests, icon: Users },
     { value: "food", label: t.partyPage.tabs.food, icon: UtensilsCrossed },
     { value: "drinks", label: t.partyPage.tabs.drinks, icon: Beer },
-    { value: "rides", label: t.partyPage.tabs.rides, icon: Car },
     { value: "shopping", label: t.partyPage.tabs.shopping, icon: ShoppingCart },
     { value: "location", label: t.partyPage.tabs.location, icon: MapPin },
   ] as const;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-8 pb-28 sm:pt-12">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15">
-              <Flame className="size-5 text-primary" aria-hidden="true" />
-            </div>
-            <CardTitle className="text-2xl">{party.title}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4 text-base">
-          <div>
-            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-              <CalendarDays className="size-3.5" aria-hidden="true" />
-              {t.partyPage.when}
-            </div>
-            <div>{formatPartyDateTime(party.startsAt, locale)}</div>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-              <MapPin className="size-3.5" aria-hidden="true" />
-              {t.partyPage.where}
-            </div>
-            <div>{party.location}</div>
-          </div>
-          {party.notes && (
-            <div>
-              <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                <NotebookPen className="size-3.5" aria-hidden="true" />
-                {t.partyPage.notes}
-              </div>
-              <div className="whitespace-pre-wrap">{party.notes}</div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-col gap-2">
-        <CopyLinkButton />
-        <p className="text-muted-foreground text-center text-sm">{t.partyPage.shareHint}</p>
-      </div>
-
       <Tabs defaultValue="guests" className="gap-0">
-        <TabsContent value="guests">
+        <TabsContent value="guests" className="flex flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                  <Flame className="size-5 text-primary" aria-hidden="true" />
+                </div>
+                <CardTitle className="text-2xl">{party.title}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 text-base">
+              <div>
+                <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                  <CalendarDays className="size-3.5" aria-hidden="true" />
+                  {t.partyPage.when}
+                </div>
+                <div>{formatPartyDateTime(party.startsAt, locale)}</div>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                  <MapPin className="size-3.5" aria-hidden="true" />
+                  {t.partyPage.where}
+                </div>
+                <div>{party.location}</div>
+              </div>
+              {party.notes && (
+                <div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                    <NotebookPen className="size-3.5" aria-hidden="true" />
+                    {t.partyPage.notes}
+                  </div>
+                  <div className="whitespace-pre-wrap">{party.notes}</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="flex flex-col gap-2">
+            <CopyLinkButton />
+            <p className="text-muted-foreground text-center text-sm">{t.partyPage.shareHint}</p>
+          </div>
+
           <ParticipantsSection slug={party.slug} participants={party.participants} />
         </TabsContent>
 
@@ -132,10 +130,6 @@ export default async function PartyPage({
           <DrinksSection slug={party.slug} drinkSelections={drinkSelections} />
         </TabsContent>
 
-        <TabsContent value="rides">
-          <RideSection slug={party.slug} participants={party.participants} />
-        </TabsContent>
-
         <TabsContent value="shopping">
           <ShoppingListSection
             foodItems={party.foodItems}
@@ -144,7 +138,8 @@ export default async function PartyPage({
           />
         </TabsContent>
 
-        <TabsContent value="location">
+        <TabsContent value="location" className="flex flex-col gap-6">
+          <RideSection slug={party.slug} participants={party.participants} />
           <Suspense
             fallback={<p className="text-muted-foreground text-sm">{t.partyPage.loadingLocation}</p>}
           >

@@ -46,7 +46,6 @@ export const en: Dictionary = {
       guests: "Guests",
       food: "Food",
       drinks: "Drinks",
-      rides: "Rides",
       shopping: "Shopping",
       location: "Location",
     },

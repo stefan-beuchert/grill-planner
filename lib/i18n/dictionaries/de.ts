@@ -46,7 +46,6 @@ export const de = {
       guests: "Gäste",
       food: "Essen",
       drinks: "Getränke",
-      rides: "Fahrten",
       shopping: "Einkauf",
       location: "Ort",
     },
