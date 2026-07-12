@@ -37,6 +37,13 @@ model Party {
   /// from `note` above since it's a different coordination context (e.g.
   /// "please bring your own plates/cups").
   bringNote String?
+
+  /// Cached AI Event Summary (see PRODUCT.md). Regenerated on demand, not
+  /// automatically — these three fields are only ever written together.
+  aiSummaryRecap       String?
+  aiSummaryOpenPoints  String[] @default([])
+  aiSummaryGeneratedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

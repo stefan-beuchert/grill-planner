@@ -120,6 +120,23 @@ export const de = {
     driverSeats: (name: string, seats: number) =>
       `${name} — ${seats} ${seats === 1 ? "Platz" : "Plätze"}`,
   },
+  aiSummary: {
+    heading: "KI-Zusammenfassung",
+    intro: "Hol dir eine kurze Übersicht über den Stand der Planung und sieh, was noch offen ist.",
+    generateButton: "Zusammenfassung erstellen",
+    refreshButton: "Aktualisieren",
+    generating: "Wird erstellt ...",
+    generatedAgo: (time: string) => `Erstellt ${time}`,
+    justNow: "gerade eben",
+    minutesAgo: (n: number) => `vor ${n} Minute${n === 1 ? "" : "n"}`,
+    hoursAgo: (n: number) => `vor ${n} Stunde${n === 1 ? "" : "n"}`,
+    daysAgo: (n: number) => `vor ${n} Tag${n === 1 ? "" : "en"}`,
+    openPointsHeading: "Offene Punkte",
+    noOpenPoints: "Gerade scheint nichts Offensichtliches zu fehlen.",
+    copyButton: "Kopieren",
+    copied: "Kopiert!",
+    generationFailed: "Die Zusammenfassung konnte nicht erstellt werden. Bitte versuche es erneut.",
+  },
   admin: {
     heading: "Admin",
     passcodePlaceholder: "4-stelliger Code",

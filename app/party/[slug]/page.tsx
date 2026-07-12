@@ -19,6 +19,7 @@ import { RideSection } from "@/components/party/ride-section";
 import { ShoppingListSection } from "@/components/party/shopping-list-section";
 import { LocationSection } from "@/components/party/location-section";
 import { PartyHeader } from "@/components/party/party-header";
+import { AiSummary } from "@/components/party/ai-summary";
 import { AdminPartyControls } from "@/components/admin/admin-party-controls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -134,6 +135,12 @@ export default async function PartyPage({
         </TabsContent>
 
         <TabsContent value="guests" className="flex flex-col gap-6">
+          <AiSummary
+            slug={party.slug}
+            recap={party.aiSummaryRecap}
+            openPoints={party.aiSummaryOpenPoints}
+            generatedAt={party.aiSummaryGeneratedAt}
+          />
           {admin && (
             <AdminPartyControls
               slug={party.slug}

@@ -11,6 +11,10 @@ services:
       DIRECT_URL: postgresql://postgres:postgres@db:5432/grillplanner
       # Dev-only default. Production sets its own value as a Vercel env var.
       ADMIN_PASSCODE: "1234"
+      # Real credential — pulled from a local, gitignored .env file (Docker
+      # Compose auto-loads .env for ${...} substitution). Production sets
+      # its own value as a Vercel env var, same as ADMIN_PASSCODE.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - .:/app
       - /app/node_modules

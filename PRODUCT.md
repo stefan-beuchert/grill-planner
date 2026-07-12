@@ -1,4 +1,4 @@
-# Grill Planner — Product Vision (v2, draft)
+# Grill Planner — Product Vision (v2 shipped, v3 in planning)
 
 Version 1 taught us something the original spec didn't anticipate: a BBQ has
 two fundamentally different kinds of "stuff" — things the group needs to buy
@@ -187,6 +187,74 @@ round.
 - **Driver Coordination** — driving / available seats / needs a ride.
 - **Weather** — forecast, temperature, rain probability for the party date.
 - **Maps** — embedded map of the meeting location.
+
+---
+
+## v3 (planned): AI Event Summary
+
+**Purpose.** This isn't a dashboard feature — it's a specific bet on a group
+dynamic. In group chats, obvious open points ("nobody's bringing a grill")
+often go unaddressed even though everyone can see them, because raising it
+means becoming "the organizer" or "the nag." The hope is that a neutral,
+machine-generated observation removes that social cost — nobody has to be
+the bad guy who assigns tasks or does everything themselves out of
+everyone else's passivity. This is explicitly a hypothesis, not a proven
+mechanism — worth shipping minimally and watching whether it actually
+changes behavior at a real event before investing further.
+
+**Where:** Guests tab, above the guest list — not a new tab. The app
+already sits at 5 tabs and PRODUCT.md's own principles argue against
+growing that count for something that isn't a distinct planning task.
+
+**Trigger and caching:** a manual "Generate" / "Refresh" button, not
+automatic generation on tab view. The result is cached — new `Party`
+fields `aiSummary` (text) and `aiSummaryGeneratedAt` (timestamp) — and
+shown with a "generated X ago" indicator. Regenerating is a conscious
+action by whoever taps it, available to any participant, same as every
+other open-collaboration action in this app.
+
+**Model:** `claude-haiku-4-5`, called server-side from a Server Action,
+non-streaming (output is short). Cheapest tier; upgrading to a stronger
+model later is a one-line change if judgment quality disappoints in
+practice.
+
+**Inputs:** guest list + ride status, Shared Purchases items (category,
+total, contributors, purchased state), Things People Bring items, both
+party notes, weather forecast, location, party title/date. The Shopping
+List is deliberately **not** a separate input — it's the same data as
+Shared Purchases, just re-presented, and would only bloat the prompt.
+
+**Output shape:** two parts —
+
+1. A short general recap of the plan (who's coming, what's covered).
+2. A distinct **"Open Points"** section — the actual point of the
+   feature. Each item is phrased around the missing *thing*, never around
+   who hasn't acted: "No one has signed up to bring a grill yet," not
+   "Tom hasn't brought anything." This is load-bearing for the whole
+   premise — naming a person reintroduces exactly the finger-pointing
+   dynamic the feature exists to avoid, so contributor data may inform the
+   model's judgment but must never surface as blame in the output.
+
+**Sharing:** a **Copy button specifically on the Open Points section**, so
+whoever generates it can paste it directly into the group chat (WhatsApp,
+etc.) — which is where the actual coordination silence happens, not inside
+this app. Without this, the neutral phrasing only helps once someone
+manually retypes it elsewhere anyway; the copy button is what actually
+closes the loop back to where the problem lives.
+
+**Known trade-offs, documented not solved:**
+
+- Guest names, contribution data, and location get sent to a third-party
+  LLM API. Low-stakes for a small friends app, but a conscious choice, not
+  an oversight.
+- No prompt-injection hardening against mischievous item/guest names (e.g.
+  someone naming a food item something adversarial). Acceptable given this
+  is read-only and triggers no actions — worst case is a weird sentence in
+  the output, not a security issue.
+- The core hypothesis is unvalidated: whether a neutral AI-phrased gap
+  actually gets addressed where a human-phrased one wouldn't have. Some
+  groups may ignore any reminder regardless of source. Ship small, watch a
+  real event, adjust before building further on top of this.
 
 ---
 
