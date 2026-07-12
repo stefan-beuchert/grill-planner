@@ -17,6 +17,7 @@ export const en: Dictionary = {
     fewerAria: (name: string) => `Fewer ${name}`,
     moreAria: (name: string) => `More ${name}`,
     editQuantityAria: (name: string) => `Edit quantity for ${name}`,
+    cancelQuantityAria: (name: string) => `Cancel editing quantity for ${name}`,
     saveQuantityAria: (name: string) => `Save quantity for ${name}`,
   },
   localeToggle: {
@@ -48,9 +49,10 @@ export const en: Dictionary = {
     createFailed: "Couldn't create the party. Please try again.",
   },
   partyPage: {
-    when: "When",
-    where: "Where",
     notes: "Notes",
+    addNote: "Add a note",
+    editNote: "Edit note",
+    notePlaceholder: "e.g. bring your own chair, parking is on the street",
     shareHint: "Anyone with this link can view and join the party.",
     loadingLocation: "Loading weather and map...",
     tabs: {

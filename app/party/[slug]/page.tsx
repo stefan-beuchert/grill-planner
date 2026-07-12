@@ -1,16 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import {
-  CalendarDays,
-  HandPlatter,
-  MapPin,
-  NotebookPen,
-  ShoppingBasket,
-  ShoppingCart,
-  Users,
-} from "lucide-react";
+import { HandPlatter, MapPin, ShoppingBasket, ShoppingCart, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { formatPartyDateTime } from "@/lib/party-datetime";
 import { CopyLinkButton } from "@/components/party/copy-link-button";
 import { ParticipantsSection } from "@/components/party/participants-section";
 import { SharedPurchasesSection } from "@/components/party/shared-purchases-section";
@@ -20,8 +11,8 @@ import { ShoppingListSection } from "@/components/party/shopping-list-section";
 import { LocationSection } from "@/components/party/location-section";
 import { PartyHeader } from "@/components/party/party-header";
 import { AiSummary } from "@/components/party/ai-summary";
+import { GeneralNote } from "@/components/party/general-note";
 import { AdminPartyControls } from "@/components/admin/admin-party-controls";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
@@ -154,35 +145,7 @@ export default async function PartyPage({
               }}
             />
           )}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                <CalendarDays className="size-3.5" aria-hidden="true" />
-                {t.partyPage.when}
-              </div>
-              <CardTitle className="text-base font-normal">
-                {formatPartyDateTime(party.startsAt, locale)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4 text-base">
-              <div>
-                <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                  <MapPin className="size-3.5" aria-hidden="true" />
-                  {t.partyPage.where}
-                </div>
-                <div>{party.location}</div>
-              </div>
-              {party.notes && (
-                <div>
-                  <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                    <NotebookPen className="size-3.5" aria-hidden="true" />
-                    {t.partyPage.notes}
-                  </div>
-                  <div className="whitespace-pre-wrap">{party.notes}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <GeneralNote slug={party.slug} notes={party.notes} />
 
           <ParticipantsSection
             slug={party.slug}
@@ -197,6 +160,7 @@ export default async function PartyPage({
         </TabsContent>
 
         <TabsContent value="location" className="flex flex-col gap-6">
+          <GeneralNote slug={party.slug} notes={party.notes} />
           <RideSection slug={party.slug} participants={party.participants} />
           <Suspense
             fallback={<p className="text-muted-foreground text-sm">{t.partyPage.loadingLocation}</p>}

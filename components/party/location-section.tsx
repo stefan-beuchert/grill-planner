@@ -55,6 +55,7 @@ export async function LocationSection({
 
       <div className="flex flex-col gap-2">
         <SectionHeading icon={MapPin}>{t.location.mapHeading}</SectionHeading>
+        <p className="text-base">{location}</p>
         {coords ? (
           <iframe
             title="Party location map"

@@ -15,6 +15,7 @@ export const de = {
     fewerAria: (name: string) => `Weniger ${name}`,
     moreAria: (name: string) => `Mehr ${name}`,
     editQuantityAria: (name: string) => `Menge für ${name} bearbeiten`,
+    cancelQuantityAria: (name: string) => `Bearbeiten der Menge für ${name} abbrechen`,
     saveQuantityAria: (name: string) => `Menge für ${name} speichern`,
   },
   localeToggle: {
@@ -46,9 +47,10 @@ export const de = {
     createFailed: "Die Party konnte nicht erstellt werden. Bitte versuche es erneut.",
   },
   partyPage: {
-    when: "Wann",
-    where: "Wo",
     notes: "Notizen",
+    addNote: "Notiz hinzufügen",
+    editNote: "Notiz bearbeiten",
+    notePlaceholder: "z. B. eigenen Stuhl mitbringen, Parken ist auf der Straße möglich",
     shareHint: "Jeder mit diesem Link kann die Party sehen und mitmachen.",
     loadingLocation: "Wetter und Karte werden geladen ...",
     tabs: {

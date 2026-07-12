@@ -102,10 +102,29 @@ export function ContributionList({
             )}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-base">{item.name}</span>
-              <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-medium text-primary tabular-nums">
-                × {total}
-              </span>
+              <span className="min-w-0 truncate text-base">{item.name}</span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-medium text-primary tabular-nums">
+                  × {total}
+                </span>
+                {!locked && stored && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={busy}
+                    onClick={() => toggleEditing(item.id, mine)}
+                    className="h-11 w-11"
+                    aria-label={
+                      editing
+                        ? t.common.cancelQuantityAria(item.name)
+                        : t.common.editQuantityAria(item.name)
+                    }
+                  >
+                    {editing ? <X className="size-4" /> : <Pencil className="size-4" />}
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               {item.contributions.map((c) => (
@@ -128,67 +147,48 @@ export function ContributionList({
                 </span>
               ))}
             </div>
-            {locked ? (
+            {locked && (
               <span className="text-muted-foreground flex items-center gap-1 text-xs">
                 <Lock className="size-3.5" aria-hidden="true" />
                 {item.purchasedByName ? t.shoppingList.purchasedBy(item.purchasedByName) : null}
               </span>
-            ) : (
-              stored && (
-                <div className="flex items-center justify-end gap-3">
-                  {editing && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        disabled={busy || draftQty <= 0}
-                        onClick={() => setDraftQty((q) => Math.max(0, q - 1))}
-                        className="h-11 w-11"
-                        aria-label={t.common.fewerAria(item.name)}
-                      >
-                        <Minus className="size-4" />
-                      </Button>
-                      <span className="w-4 text-center text-base tabular-nums">{draftQty}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        disabled={busy || draftQty >= 99}
-                        onClick={() => setDraftQty((q) => Math.min(99, q + 1))}
-                        className="h-11 w-11"
-                        aria-label={t.common.moreAria(item.name)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        size="icon"
-                        disabled={busy}
-                        onClick={() => saveQuantity(item.id, mine)}
-                        className="h-11 w-11"
-                        aria-label={t.common.saveQuantityAria(item.name)}
-                      >
-                        <Check className="size-4" />
-                      </Button>
-                    </>
-                  )}
-                  {/* Same button in the same slot either way — it opens the
-                      editor, or (while open) closes it and discards the
-                      draft, per the "edit icon acts as a toggle" decision. */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled={busy}
-                    onClick={() => toggleEditing(item.id, mine)}
-                    className="h-11 w-11"
-                    aria-label={t.common.editQuantityAria(item.name)}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                </div>
-              )
+            )}
+            {editing && stored && (
+              <div className="flex items-center justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={busy || draftQty <= 0}
+                  onClick={() => setDraftQty((q) => Math.max(0, q - 1))}
+                  className="h-11 w-11"
+                  aria-label={t.common.fewerAria(item.name)}
+                >
+                  <Minus className="size-4" />
+                </Button>
+                <span className="w-4 text-center text-base tabular-nums">{draftQty}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={busy || draftQty >= 99}
+                  onClick={() => setDraftQty((q) => Math.min(99, q + 1))}
+                  className="h-11 w-11"
+                  aria-label={t.common.moreAria(item.name)}
+                >
+                  <Plus className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  disabled={busy}
+                  onClick={() => saveQuantity(item.id, mine)}
+                  className="h-11 w-11"
+                  aria-label={t.common.saveQuantityAria(item.name)}
+                >
+                  <Check className="size-4" />
+                </Button>
+              </div>
             )}
           </li>
         );
