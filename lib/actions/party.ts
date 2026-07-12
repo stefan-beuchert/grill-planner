@@ -10,14 +10,6 @@ import { dictionaries } from "@/lib/i18n/dictionaries";
 
 const MAX_SLUG_ATTEMPTS = 5;
 
-// A reasonable starting point per AGENTS.md — participants can add more.
-// Seeded in the creator's current language; like any user-generated text,
-// it doesn't retroactively translate for other viewers.
-const DEFAULT_FOOD_ITEMS = {
-  de: ["Steak", "Bratwurst", "Veggie-Burger", "Halloumi"],
-  en: ["Steak", "Sausage", "Veggie Burger", "Halloumi"],
-};
-
 export async function createParty(values: PartyFormValues) {
   const locale = await getLocale();
   const t = dictionaries[locale];
@@ -54,7 +46,6 @@ export async function createParty(values: PartyFormValues) {
       startsAt,
       location,
       notes: notes || null,
-      foodItems: { create: DEFAULT_FOOD_ITEMS[locale].map((name) => ({ name })) },
     },
   });
 
