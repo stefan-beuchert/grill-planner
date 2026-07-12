@@ -1,5 +1,6 @@
 import { Flame } from "lucide-react";
 import { CreatePartyForm } from "@/components/party/create-party-form";
+import { LocaleToggle } from "@/components/locale-toggle";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 
@@ -17,7 +18,10 @@ export default async function Home() {
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
             <Flame className="size-6 text-primary" aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Grill Planner</h1>
+          <h1 className="min-w-0 flex-1 truncate text-2xl font-semibold tracking-tight">
+            Grill Planner
+          </h1>
+          <LocaleToggle />
         </div>
         <p className="text-muted-foreground text-base">{t.landing.tagline}</p>
       </div>

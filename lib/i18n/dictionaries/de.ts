@@ -50,7 +50,8 @@ export const de = {
     notes: "Notizen",
     addNote: "Notiz hinzufügen",
     editNote: "Notiz bearbeiten",
-    notePlaceholder: "z. B. eigenen Stuhl mitbringen, Parken ist auf der Straße möglich",
+    notePlaceholder: "z. B. eigenen Stuhl mitbringen",
+    locationNotePlaceholder: "z. B. Parken ist auf der Straße möglich, zweimal klingeln",
     shareHint: "Jeder mit diesem Link kann die Party sehen und mitmachen.",
     loadingLocation: "Wetter und Karte werden geladen ...",
     tabs: {
@@ -168,6 +169,10 @@ export const de = {
     unmark: "Markierung aufheben",
     purchasedBy: (name: string) => `Gekauft von ${name}`,
     onlyPurchaserCanUnmark: "Nur die Person, die es gekauft hat, kann die Markierung aufheben.",
+    noteLabel: "Notiz",
+    addNote: "Notiz hinzufügen",
+    editNote: "Notiz bearbeiten",
+    notePlaceholder: "z. B. beide Läden checken, der übliche hat sonntags zu",
   },
   location: {
     weatherHeading: "Wetter",

@@ -52,7 +52,8 @@ export const en: Dictionary = {
     notes: "Notes",
     addNote: "Add a note",
     editNote: "Edit note",
-    notePlaceholder: "e.g. bring your own chair, parking is on the street",
+    notePlaceholder: "e.g. bring your own chair",
+    locationNotePlaceholder: "e.g. parking is on the street, ring the doorbell twice",
     shareHint: "Anyone with this link can view and join the party.",
     loadingLocation: "Loading weather and map...",
     tabs: {
@@ -168,6 +169,10 @@ export const en: Dictionary = {
     unmark: "Unmark",
     purchasedBy: (name: string) => `Purchased by ${name}`,
     onlyPurchaserCanUnmark: "Only the person who purchased this can unmark it.",
+    noteLabel: "Note",
+    addNote: "Add a note",
+    editNote: "Edit note",
+    notePlaceholder: "e.g. check both stores, the usual one is closed Sundays",
   },
   location: {
     weatherHeading: "Weather",

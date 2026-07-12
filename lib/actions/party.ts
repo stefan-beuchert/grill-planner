@@ -109,6 +109,60 @@ export async function setPartyNotes(
   return { success: true as const };
 }
 
+export async function setLocationNote(
+  slug: string,
+  participantId: string,
+  editToken: string,
+  note: string,
+) {
+  const t = dictionaries[await getLocale()];
+
+  const parsed = partyNoteSchema.safeParse({ note });
+  if (!parsed.success) {
+    return { success: false as const, error: t.common.invalidNote };
+  }
+
+  const participant = await authorizeParticipant(participantId, editToken);
+  if (!participant) {
+    return { success: false as const, error: t.common.joinFirst };
+  }
+
+  await prisma.party.update({
+    where: { id: participant.partyId },
+    data: { locationNote: parsed.data.note || null },
+  });
+
+  revalidatePath(`/party/${slug}`);
+  return { success: true as const };
+}
+
+export async function setShoppingNote(
+  slug: string,
+  participantId: string,
+  editToken: string,
+  note: string,
+) {
+  const t = dictionaries[await getLocale()];
+
+  const parsed = partyNoteSchema.safeParse({ note });
+  if (!parsed.success) {
+    return { success: false as const, error: t.common.invalidNote };
+  }
+
+  const participant = await authorizeParticipant(participantId, editToken);
+  if (!participant) {
+    return { success: false as const, error: t.common.joinFirst };
+  }
+
+  await prisma.party.update({
+    where: { id: participant.partyId },
+    data: { shoppingNote: parsed.data.note || null },
+  });
+
+  revalidatePath(`/party/${slug}`);
+  return { success: true as const };
+}
+
 export async function setBringNote(
   slug: string,
   participantId: string,

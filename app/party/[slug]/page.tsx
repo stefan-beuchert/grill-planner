@@ -12,6 +12,7 @@ import { LocationSection } from "@/components/party/location-section";
 import { PartyHeader } from "@/components/party/party-header";
 import { AiSummary } from "@/components/party/ai-summary";
 import { GeneralNote } from "@/components/party/general-note";
+import { LocationNote } from "@/components/party/location-note";
 import { AdminPartyControls } from "@/components/admin/admin-party-controls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -160,7 +161,7 @@ export default async function PartyPage({
         </TabsContent>
 
         <TabsContent value="location" className="flex flex-col gap-6">
-          <GeneralNote slug={party.slug} notes={party.notes} />
+          <LocationNote slug={party.slug} note={party.locationNote} />
           <RideSection slug={party.slug} participants={party.participants} />
           <Suspense
             fallback={<p className="text-muted-foreground text-sm">{t.partyPage.loadingLocation}</p>}
@@ -173,7 +174,7 @@ export default async function PartyPage({
           <ShoppingListSection
             slug={party.slug}
             items={shoppingItems}
-            note={party.note}
+            note={party.shoppingNote}
             isAdmin={admin}
           />
         </TabsContent>

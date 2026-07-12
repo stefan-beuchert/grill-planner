@@ -29,10 +29,21 @@ model Party {
   title     String
   startsAt  DateTime
   location  String
+  /// General note shown on the Guests tab. Independent from `locationNote`
+  /// below — the two are separate coordination contexts even though they
+  /// share the same lightweight note-widget UI.
   notes     String?
-  /// Optional freeform note shown on Shared Purchases and the Shopping
-  /// List — e.g. "everyone grills their own meat, just chip in for extras".
+  /// Location/logistics-specific note shown on the Location tab (e.g.
+  /// "parking is on the street, ring the doorbell twice"). Independent
+  /// from `notes` above.
+  locationNote String?
+  /// Optional freeform note shown on Shared Purchases — e.g. "everyone
+  /// grills their own meat, just chip in for extras". Independent from
+  /// `shoppingNote` below even though the two tabs are closely related.
   note      String?
+  /// Optional freeform note shown on the Shopping List. Independent from
+  /// `note` above — every tab's note is its own field now, none shared.
+  shoppingNote String?
   /// Optional freeform note shown on Things People Bring — a separate note
   /// from `note` above since it's a different coordination context (e.g.
   /// "please bring your own plates/cups").
