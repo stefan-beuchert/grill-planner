@@ -80,12 +80,10 @@ export const en: Dictionary = {
   drinks: {
     heading: "Drinks",
     joinPrompt: "Join the party above to say what you'd like to drink.",
-    types: {
-      BEER: "Beer",
-      SOFT_DRINK: "Soft drink",
-      WINE: "Wine",
-      OTHER: "Other",
-    },
+    addPlaceholder: "Add something else...",
+    addSubmit: "Add",
+    nameRequired: "Name the drink",
+    alreadyOnList: "That's already on the list.",
     fewerAria: (name: string) => `Fewer ${name}`,
     moreAria: (name: string) => `More ${name}`,
   },

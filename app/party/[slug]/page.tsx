@@ -43,11 +43,18 @@ export default async function PartyPage({
           isDriver: true,
           seatsFree: true,
           needsRide: true,
-          drinkSelections: { select: { type: true, quantity: true } },
         },
         orderBy: { createdAt: "asc" },
       },
       foodItems: {
+        select: {
+          id: true,
+          name: true,
+          selections: { select: { participantId: true, quantity: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+      drinkItems: {
         select: {
           id: true,
           name: true,
@@ -61,10 +68,6 @@ export default async function PartyPage({
   if (!party) {
     notFound();
   }
-
-  const drinkSelections = party.participants.flatMap((p) =>
-    p.drinkSelections.map((d) => ({ participantId: p.id, ...d })),
-  );
 
   const tabs = [
     { value: "guests", label: t.partyPage.tabs.guests, icon: Users },
@@ -127,13 +130,13 @@ export default async function PartyPage({
         </TabsContent>
 
         <TabsContent value="drinks">
-          <DrinksSection slug={party.slug} drinkSelections={drinkSelections} />
+          <DrinksSection slug={party.slug} drinkItems={party.drinkItems} />
         </TabsContent>
 
         <TabsContent value="shopping">
           <ShoppingListSection
             foodItems={party.foodItems}
-            drinkSelections={drinkSelections}
+            drinkItems={party.drinkItems}
             t={t}
           />
         </TabsContent>

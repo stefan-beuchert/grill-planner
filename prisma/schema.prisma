@@ -24,6 +24,7 @@ model Party {
 
   participants Participant[]
   foodItems    FoodItem[]
+  drinkItems   DrinkItem[]
 
   @@map("parties")
 }
@@ -81,21 +82,30 @@ model FoodSelection {
   @@map("food_selections")
 }
 
-enum DrinkType {
-  BEER
-  SOFT_DRINK
-  WINE
-  OTHER
+/// A drink item available to choose from for a party — added by a
+/// participant. No defaults are seeded; the list starts empty.
+model DrinkItem {
+  id        String   @id @default(cuid())
+  partyId   String
+  party     Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+
+  selections DrinkSelection[]
+
+  @@unique([partyId, name])
+  @@map("drink_items")
 }
 
-/// How much of a given drink type a participant is bringing/expecting.
+/// How much of a given drink item a participant wants.
 model DrinkSelection {
   id            String      @id @default(cuid())
   participantId String
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  type          DrinkType
+  drinkItemId   String
+  drinkItem     DrinkItem   @relation(fields: [drinkItemId], references: [id], onDelete: Cascade)
   quantity      Int         @default(1)
 
-  @@unique([participantId, type])
+  @@unique([participantId, drinkItemId])
   @@map("drink_selections")
 }

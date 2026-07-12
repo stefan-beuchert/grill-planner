@@ -1,5 +1,3 @@
-import type { DrinkType } from "@/lib/generated/prisma/enums";
-
 export const de = {
   common: {
     invalidQuantity: "Ungültige Menge.",
@@ -80,12 +78,10 @@ export const de = {
   drinks: {
     heading: "Getränke",
     joinPrompt: "Tritt der Party oben bei, um zu sagen, was du trinken möchtest.",
-    types: {
-      BEER: "Bier",
-      SOFT_DRINK: "Softdrink",
-      WINE: "Wein",
-      OTHER: "Sonstiges",
-    } satisfies Record<DrinkType, string>,
+    addPlaceholder: "Etwas anderes hinzufügen ...",
+    addSubmit: "Hinzufügen",
+    nameRequired: "Gib dem Getränk einen Namen",
+    alreadyOnList: "Das steht schon auf der Liste.",
     fewerAria: (name: string) => `Weniger ${name}`,
     moreAria: (name: string) => `Mehr ${name}`,
   },
