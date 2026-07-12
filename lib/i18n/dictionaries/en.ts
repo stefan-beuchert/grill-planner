@@ -100,6 +100,10 @@ export const en: Dictionary = {
     empty: "Nothing yet — add something you're bringing.",
     addPlaceholder: "Add something you're bringing...",
     addSubmit: "Add",
+    noteLabel: "Note",
+    addNote: "Add a note",
+    editNote: "Edit note",
+    notePlaceholder: "e.g. please bring your own plates and cups",
   },
   rides: {
     heading: "Getting there",

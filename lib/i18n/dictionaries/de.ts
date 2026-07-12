@@ -98,6 +98,10 @@ export const de = {
     empty: "Noch nichts hier — trag ein, was du mitbringst.",
     addPlaceholder: "Etwas hinzufügen, das du mitbringst ...",
     addSubmit: "Hinzufügen",
+    noteLabel: "Notiz",
+    addNote: "Notiz hinzufügen",
+    editNote: "Notiz bearbeiten",
+    notePlaceholder: "z. B. bitte eigene Teller und Becher mitbringen",
   },
   rides: {
     heading: "Fahrten",

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   CalendarDays,
-  Gift,
+  HandPlatter,
   MapPin,
   NotebookPen,
   ShoppingBasket,
@@ -104,17 +104,17 @@ export default async function PartyPage({
   }));
 
   const tabs = [
-    { value: "purchases", label: t.partyPage.tabs.purchases, icon: ShoppingBasket },
-    { value: "bringing", label: t.partyPage.tabs.bringing, icon: Gift },
     { value: "guests", label: t.partyPage.tabs.guests, icon: Users },
-    { value: "location", label: t.partyPage.tabs.location, icon: MapPin },
+    { value: "purchases", label: t.partyPage.tabs.purchases, icon: ShoppingBasket },
+    { value: "bringing", label: t.partyPage.tabs.bringing, icon: HandPlatter },
     { value: "shopping", label: t.partyPage.tabs.shopping, icon: ShoppingCart },
+    { value: "location", label: t.partyPage.tabs.location, icon: MapPin },
   ] as const;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-3 pb-28 sm:pt-3">
       <PartyHeader title={party.title} startsAt={party.startsAt} locale={locale} />
-      <Tabs defaultValue="purchases" className="gap-0">
+      <Tabs defaultValue="guests" className="gap-0">
         <TabsContent value="purchases">
           <SharedPurchasesSection
             slug={party.slug}
@@ -125,7 +125,12 @@ export default async function PartyPage({
         </TabsContent>
 
         <TabsContent value="bringing">
-          <ThingsToBringSection slug={party.slug} items={bringItems} isAdmin={admin} />
+          <ThingsToBringSection
+            slug={party.slug}
+            items={bringItems}
+            bringNote={party.bringNote}
+            isAdmin={admin}
+          />
         </TabsContent>
 
         <TabsContent value="guests" className="flex flex-col gap-6">
@@ -172,16 +177,16 @@ export default async function PartyPage({
             </CardContent>
           </Card>
 
-          <div className="flex flex-col gap-2">
-            <CopyLinkButton />
-            <p className="text-muted-foreground text-center text-sm">{t.partyPage.shareHint}</p>
-          </div>
-
           <ParticipantsSection
             slug={party.slug}
             participants={party.participants}
             isAdmin={admin}
           />
+
+          <div className="flex flex-col gap-2">
+            <CopyLinkButton />
+            <p className="text-muted-foreground text-center text-sm">{t.partyPage.shareHint}</p>
+          </div>
         </TabsContent>
 
         <TabsContent value="location" className="flex flex-col gap-6">

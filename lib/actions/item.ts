@@ -42,16 +42,16 @@ export async function addItem(
     return { success: false as const, error: t.common.itemAlreadyOnList };
   }
 
-  const item = await prisma.item.create({
+  // Nested write: creates the item and its first contribution in a single
+  // round trip instead of two separate sequential creates.
+  await prisma.item.create({
     data: {
       partyId: participant.partyId,
       listType,
       category: listType === "SHARED_PURCHASE" ? category : null,
       name: parsed.data.name,
+      contributions: { create: { participantId, quantity: 1 } },
     },
-  });
-  await prisma.contribution.create({
-    data: { itemId: item.id, participantId, quantity: 1 },
   });
 
   revalidatePath(`/party/${slug}`);
@@ -72,12 +72,14 @@ export async function setContribution(
     return { success: false as const, error: t.common.invalidQuantity };
   }
 
-  const participant = await authorizeParticipant(participantId, editToken);
+  // Independent lookups — run concurrently instead of one-after-another.
+  const [participant, item] = await Promise.all([
+    authorizeParticipant(participantId, editToken),
+    prisma.item.findUnique({ where: { id: itemId } }),
+  ]);
   if (!participant) {
     return { success: false as const, error: t.common.onlyOwnSelections };
   }
-
-  const item = await prisma.item.findUnique({ where: { id: itemId } });
   if (!item) {
     return { success: false as const, error: t.common.itemGone };
   }
@@ -113,12 +115,13 @@ export async function setItemPurchased(
 ) {
   const t = dictionaries[await getLocale()];
 
-  const participant = await authorizeParticipant(participantId, editToken);
+  const [participant, item] = await Promise.all([
+    authorizeParticipant(participantId, editToken),
+    prisma.item.findUnique({ where: { id: itemId } }),
+  ]);
   if (!participant) {
     return { success: false as const, error: t.common.onlyOwnSelections };
   }
-
-  const item = await prisma.item.findUnique({ where: { id: itemId } });
   if (!item || item.listType !== "SHARED_PURCHASE") {
     return { success: false as const, error: t.common.itemGone };
   }

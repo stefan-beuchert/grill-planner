@@ -33,6 +33,10 @@ model Party {
   /// Optional freeform note shown on Shared Purchases and the Shopping
   /// List — e.g. "everyone grills their own meat, just chip in for extras".
   note      String?
+  /// Optional freeform note shown on Things People Bring — a separate note
+  /// from `note` above since it's a different coordination context (e.g.
+  /// "please bring your own plates/cups").
+  bringNote String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

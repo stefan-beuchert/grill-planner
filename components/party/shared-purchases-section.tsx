@@ -7,6 +7,7 @@ import { AddItemForm } from "@/components/party/add-item-form";
 import { CollapsibleSection } from "@/components/party/collapsible-section";
 import { SectionHeading } from "@/components/party/section-heading";
 import { PartyNote } from "@/components/party/party-note";
+import { setPartyNote } from "@/lib/actions/party";
 import { useI18n } from "@/lib/i18n/locale-context";
 import { ItemCategory, ItemListType } from "@/lib/generated/prisma/enums";
 
@@ -41,7 +42,15 @@ export function SharedPurchasesSection({
   return (
     <div className="flex flex-col gap-4">
       <SectionHeading icon={ShoppingBasket}>{t.sharedPurchases.heading}</SectionHeading>
-      <PartyNote slug={slug} note={note} />
+      <PartyNote
+        slug={slug}
+        note={note}
+        label={t.sharedPurchases.noteLabel}
+        addLabel={t.sharedPurchases.addNote}
+        editLabel={t.sharedPurchases.editNote}
+        placeholder={t.sharedPurchases.notePlaceholder}
+        save={setPartyNote}
+      />
 
       {categories.map(({ key, icon, label }) => {
         const categoryItems = byCategory[key];

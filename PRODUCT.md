@@ -26,11 +26,11 @@ The app keeps the same five-tab shape as v1 — merging Food and Drinks into
 one tab is what makes room for the new "Things People Bring" tab without
 growing the tab count:
 
-1. **Shared Purchases** — Food / Drinks / Other (collapsible sections)
-2. **Things People Bring**
-3. **Guests** — participant list
-4. **Location** — weather + map + car sharing / driver coordination
-5. **Shopping List**
+1. **Guests** — participant list
+2. **Shared Purchases** — Food / Drinks / Other (collapsible sections)
+3. **Things People Bring**
+4. **Shopping List**
+5. **Location** — weather + map + car sharing / driver coordination
 
 A persistent **party identity bar** stays visible above all five tabs:
 party title + date. It exists purely to stop the app from feeling generic
@@ -126,6 +126,10 @@ Differences from Shared Purchases:
 - These items **never** generate Shopping List entries.
 - There is no "purchased" state — nothing here is bought as a group, so
   there's nothing to lock.
+
+Like Shared Purchases, this tab has its own optional, freely-editable note
+(separate from the Shared Purchases one, since the two are different
+coordination contexts) — e.g. "please bring your own plates and cups."
 
 ---
 
