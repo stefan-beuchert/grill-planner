@@ -17,9 +17,14 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - .:/app
-      - /app/node_modules
-      - /app/.next
-      - /app/lib/generated
+      # Named (not anonymous) so they survive `docker compose down && up` —
+      # anonymous volumes get a fresh empty one on every recreate, which
+      # wipes the Turbopack build cache and forces node_modules to be
+      # re-copied from the image every time. Named volumes are looked up by
+      # name and reused, same as db_data below already was.
+      - node_modules:/app/node_modules
+      - next_cache:/app/.next
+      - prisma_generated:/app/lib/generated
     depends_on:
       db:
         condition: service_healthy
@@ -36,9 +41,12 @@ services:
       - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
+      interval: 1s
       timeout: 5s
       retries: 10
 
 volumes:
   db_data:
+  node_modules:
+  next_cache:
+  prisma_generated:
