@@ -29,30 +29,35 @@ export async function addItem(
     return { success: false as const, error: t.common.joinFirst };
   }
 
-  const existing = await prisma.item.findUnique({
-    where: {
-      partyId_listType_name: {
+  try {
+    const existing = await prisma.item.findUnique({
+      where: {
+        partyId_listType_name: {
+          partyId: participant.partyId,
+          listType,
+          name: parsed.data.name,
+        },
+      },
+    });
+    if (existing) {
+      return { success: false as const, error: t.common.itemAlreadyOnList };
+    }
+
+    // Nested write: creates the item and its first contribution in a single
+    // round trip instead of two separate sequential creates.
+    await prisma.item.create({
+      data: {
         partyId: participant.partyId,
         listType,
+        category: listType === "SHARED_PURCHASE" ? category : null,
         name: parsed.data.name,
+        contributions: { create: { participantId, quantity: 1 } },
       },
-    },
-  });
-  if (existing) {
-    return { success: false as const, error: t.common.itemAlreadyOnList };
+    });
+  } catch (err) {
+    console.error("addItem failed", { slug, participantId, listType }, err);
+    return { success: false as const, error: t.common.actionFailed };
   }
-
-  // Nested write: creates the item and its first contribution in a single
-  // round trip instead of two separate sequential creates.
-  await prisma.item.create({
-    data: {
-      partyId: participant.partyId,
-      listType,
-      category: listType === "SHARED_PURCHASE" ? category : null,
-      name: parsed.data.name,
-      contributions: { create: { participantId, quantity: 1 } },
-    },
-  });
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
@@ -87,19 +92,24 @@ export async function setContribution(
     return { success: false as const, error: t.common.itemLocked };
   }
 
-  if (parsedQuantity.data === 0) {
-    await prisma.contribution.deleteMany({ where: { itemId, participantId } });
-  } else {
-    await prisma.contribution.upsert({
-      where: { itemId_participantId: { itemId, participantId } },
-      create: { itemId, participantId, quantity: parsedQuantity.data },
-      update: { quantity: parsedQuantity.data },
-    });
-  }
+  try {
+    if (parsedQuantity.data === 0) {
+      await prisma.contribution.deleteMany({ where: { itemId, participantId } });
+    } else {
+      await prisma.contribution.upsert({
+        where: { itemId_participantId: { itemId, participantId } },
+        create: { itemId, participantId, quantity: parsedQuantity.data },
+        update: { quantity: parsedQuantity.data },
+      });
+    }
 
-  const remaining = await prisma.contribution.count({ where: { itemId } });
-  if (remaining === 0) {
-    await prisma.item.delete({ where: { id: itemId } }).catch(() => {});
+    const remaining = await prisma.contribution.count({ where: { itemId } });
+    if (remaining === 0) {
+      await prisma.item.delete({ where: { id: itemId } }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("setContribution failed", { slug, itemId, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
   }
 
   revalidatePath(`/party/${slug}`);
@@ -135,22 +145,27 @@ export async function moveItem(
     return { success: false as const, error: t.common.onlyOwnSelections };
   }
 
-  const conflict = await prisma.item.findUnique({
-    where: {
-      partyId_listType_name: { partyId: item.partyId, listType: targetListType, name: item.name },
-    },
-  });
-  if (conflict) {
-    return { success: false as const, error: t.common.itemAlreadyOnList };
-  }
+  try {
+    const conflict = await prisma.item.findUnique({
+      where: {
+        partyId_listType_name: { partyId: item.partyId, listType: targetListType, name: item.name },
+      },
+    });
+    if (conflict) {
+      return { success: false as const, error: t.common.itemAlreadyOnList };
+    }
 
-  await prisma.item.update({
-    where: { id: itemId },
-    data: {
-      listType: targetListType,
-      category: targetListType === "SHARED_PURCHASE" ? "OTHER" : null,
-    },
-  });
+    await prisma.item.update({
+      where: { id: itemId },
+      data: {
+        listType: targetListType,
+        category: targetListType === "SHARED_PURCHASE" ? "OTHER" : null,
+      },
+    });
+  } catch (err) {
+    console.error("moveItem failed", { slug, itemId, targetListType }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
@@ -176,19 +191,25 @@ export async function setItemPurchased(
     return { success: false as const, error: t.common.itemGone };
   }
 
-  if (purchased) {
-    await prisma.item.update({
-      where: { id: itemId },
-      data: { purchased: true, purchasedByParticipantId: participantId },
-    });
-  } else {
-    if (item.purchasedByParticipantId !== participantId) {
-      return { success: false as const, error: t.shoppingList.onlyPurchaserCanUnmark };
+  if (!purchased && item.purchasedByParticipantId !== participantId) {
+    return { success: false as const, error: t.shoppingList.onlyPurchaserCanUnmark };
+  }
+
+  try {
+    if (purchased) {
+      await prisma.item.update({
+        where: { id: itemId },
+        data: { purchased: true, purchasedByParticipantId: participantId },
+      });
+    } else {
+      await prisma.item.update({
+        where: { id: itemId },
+        data: { purchased: false, purchasedByParticipantId: null },
+      });
     }
-    await prisma.item.update({
-      where: { id: itemId },
-      data: { purchased: false, purchasedByParticipantId: null },
-    });
+  } catch (err) {
+    console.error("setItemPurchased failed", { slug, itemId, purchased }, err);
+    return { success: false as const, error: t.common.actionFailed };
   }
 
   revalidatePath(`/party/${slug}`);
