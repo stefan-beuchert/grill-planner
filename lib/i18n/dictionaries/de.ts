@@ -17,6 +17,7 @@ export const de = {
     editQuantityAria: (name: string) => `Menge für ${name} bearbeiten`,
     cancelQuantityAria: (name: string) => `Bearbeiten der Menge für ${name} abbrechen`,
     saveQuantityAria: (name: string) => `Menge für ${name} speichern`,
+    moveToOtherListAria: (name: string) => `„${name}" auf die andere Liste verschieben`,
   },
   localeToggle: {
     label: "Sprache",
@@ -66,7 +67,7 @@ export const de = {
       bringing: "Mitbringen",
       guests: "Gäste",
       location: "Ort",
-      shopping: "Liste",
+      shopping: "Einkaufen",
     },
   },
   copyLink: {
@@ -92,6 +93,7 @@ export const de = {
       drink: "Getränke",
       other: "Sonstiges",
     },
+    hint: "Wird gemeinsam eingekauft und bezahlt — erscheint nie auf der Mitbringen-Liste.",
     joinPrompt: "Tritt der Party oben bei, um mitzumachen.",
     emptyCategory: "Hier steht noch nichts.",
     addPlaceholder: "Etwas hinzufügen ...",
@@ -104,7 +106,7 @@ export const de = {
   },
   thingsToBring: {
     heading: "Was mitgebracht wird",
-    hint: "Nur zur Information — erscheint nie auf der Einkaufsliste.",
+    hint: "Nur zur Information — erscheint nie auf der Einkaufsliste (dafür gibt es den Tab „Einkaufen“).",
     joinPrompt: "Tritt der Party oben bei, um zu sagen, was du mitbringst.",
     empty: "Noch nichts hier — trag ein, was du mitbringst.",
     addPlaceholder: "Etwas hinzufügen, das du mitbringst ...",
@@ -174,6 +176,9 @@ export const de = {
     unmark: "Markierung aufheben",
     purchasedBy: (name: string) => `Gekauft von ${name}`,
     onlyPurchaserCanUnmark: "Nur die Person, die es gekauft hat, kann die Markierung aufheben.",
+    markPurchasedAria: (name: string) => `${name} als gekauft markieren`,
+    unmarkAria: (name: string) => `Markierung für ${name} aufheben`,
+    purchasedAria: (name: string) => `${name} wurde gekauft`,
   },
   location: {
     weatherHeading: "Wetter",

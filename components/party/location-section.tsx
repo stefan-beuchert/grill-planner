@@ -1,4 +1,4 @@
-import { CloudSun, MapPin } from "lucide-react";
+import { CloudSun, MapPin, Navigation } from "lucide-react";
 import { geocodeLocation, type Coordinates } from "@/lib/geocode";
 import { getWeatherForecast } from "@/lib/weather";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,20 @@ export async function LocationSection({
       <div className="flex flex-col gap-2">
         <SectionHeading icon={MapPin}>{t.location.mapHeading}</SectionHeading>
         <p className="text-base">{location}</p>
+        <Button
+          render={
+            <a
+              href={googleMapsUrl(location, coords)}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          }
+          nativeButton={false}
+          className="h-9 w-fit gap-1.5 self-start rounded-full px-4"
+        >
+          <Navigation className="size-4" />
+          {t.location.openInGoogleMaps}
+        </Button>
         {coords ? (
           <iframe
             title="Party location map"
@@ -70,20 +84,6 @@ export async function LocationSection({
         ) : (
           <p className="text-muted-foreground text-sm">{t.location.noMapLocation}</p>
         )}
-        <Button
-          render={
-            <a
-              href={googleMapsUrl(location, coords)}
-              target="_blank"
-              rel="noopener noreferrer"
-            />
-          }
-          nativeButton={false}
-          variant="secondary"
-          className="h-12 w-full text-base"
-        >
-          {t.location.openInGoogleMaps}
-        </Button>
       </div>
     </div>
   );

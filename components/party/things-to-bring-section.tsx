@@ -44,6 +44,7 @@ export function ThingsToBringSection({
         emptyText={t.thingsToBring.empty}
         joinPrompt={t.thingsToBring.joinPrompt}
         isAdmin={isAdmin}
+        listType={ItemListType.BRING_YOUR_OWN}
       />
 
       {stored && (

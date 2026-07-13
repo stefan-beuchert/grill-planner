@@ -19,6 +19,7 @@ export const en: Dictionary = {
     editQuantityAria: (name: string) => `Edit quantity for ${name}`,
     cancelQuantityAria: (name: string) => `Cancel editing quantity for ${name}`,
     saveQuantityAria: (name: string) => `Save quantity for ${name}`,
+    moveToOtherListAria: (name: string) => `Move "${name}" to the other list`,
   },
   localeToggle: {
     label: "Language",
@@ -94,6 +95,7 @@ export const en: Dictionary = {
       drink: "Drinks",
       other: "Other",
     },
+    hint: "Bought together and split — these never appear on the Bringing list.",
     joinPrompt: "Join the party above to chip in.",
     emptyCategory: "Nothing here yet.",
     addPlaceholder: "Add something...",
@@ -106,7 +108,7 @@ export const en: Dictionary = {
   },
   thingsToBring: {
     heading: "Things People Bring",
-    hint: "Informational only — these never appear on the Shopping List.",
+    hint: "Informational only — these never appear on the Shopping list (that's the \"Shopping\" tab).",
     joinPrompt: "Join the party above to say what you're bringing.",
     empty: "Nothing yet — add something you're bringing.",
     addPlaceholder: "Add something you're bringing...",
@@ -174,6 +176,9 @@ export const en: Dictionary = {
     unmark: "Unmark",
     purchasedBy: (name: string) => `Purchased by ${name}`,
     onlyPurchaserCanUnmark: "Only the person who purchased this can unmark it.",
+    markPurchasedAria: (name: string) => `Mark ${name} as purchased`,
+    unmarkAria: (name: string) => `Unmark ${name}`,
+    purchasedAria: (name: string) => `${name} was purchased`,
   },
   location: {
     weatherHeading: "Weather",

@@ -41,6 +41,7 @@ export function ShoppingListSection({
   return (
     <div className="flex flex-col gap-4">
       <SectionHeading icon={ShoppingCart}>{t.shoppingList.heading}</SectionHeading>
+      <p className="text-muted-foreground text-sm">{t.sharedPurchases.hint}</p>
       <SharedPurchasesNote slug={slug} note={note} />
 
       {categories.map(({ key, icon, label }) => {
@@ -60,6 +61,7 @@ export function ShoppingListSection({
               joinPrompt={t.sharedPurchases.joinPrompt}
               isAdmin={isAdmin}
               canMarkPurchased
+              listType={ItemListType.SHARED_PURCHASE}
             />
             {stored && (
               <AddItemForm

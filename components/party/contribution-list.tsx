@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Lock, Minus, Pencil, Plus, X } from "lucide-react";
+import { ArrowLeftRight, Check, Circle, CircleCheck, Lock, Minus, Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
-import { setContribution, setItemPurchased } from "@/lib/actions/item";
-import { adminRemoveContribution, adminUnmarkPurchased } from "@/lib/actions/admin";
+import { moveItem as moveItemAction, setContribution, setItemPurchased } from "@/lib/actions/item";
+import { adminMoveItem, adminRemoveContribution, adminUnmarkPurchased } from "@/lib/actions/admin";
 import { useI18n } from "@/lib/i18n/locale-context";
+import type { ItemListType } from "@/lib/generated/prisma/enums";
 
 export type ContributionItem = {
   id: string;
@@ -26,6 +27,7 @@ export function ContributionList({
   joinPrompt,
   isAdmin = false,
   canMarkPurchased = false,
+  listType,
 }: {
   slug: string;
   items: ContributionItem[];
@@ -33,6 +35,7 @@ export function ContributionList({
   joinPrompt: string;
   isAdmin?: boolean;
   canMarkPurchased?: boolean;
+  listType: ItemListType;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -98,6 +101,18 @@ export function ContributionList({
     router.refresh();
   }
 
+  async function moveItem(itemId: string, asParticipant: boolean) {
+    setPendingId(itemId);
+    const target = listType === "SHARED_PURCHASE" ? "BRING_YOUR_OWN" : "SHARED_PURCHASE";
+    if (asParticipant && stored) {
+      await moveItemAction(slug, stored.participantId, stored.editToken, itemId, target);
+    } else {
+      await adminMoveItem(slug, itemId, target);
+    }
+    setPendingId(null);
+    router.refresh();
+  }
+
   return (
     <ul className="flex flex-col gap-2">
       {items.map((item) => {
@@ -110,7 +125,10 @@ export function ContributionList({
         const locked = item.purchased === true;
         const editing = editingId === item.id;
         const canUnmarkThis = stored?.participantId === item.purchasedByParticipantId;
-        const showPurchaseRow = canMarkPurchased && (locked || !!stored);
+        const showPurchaseControl = canMarkPurchased && (locked || !!stored);
+        const canTogglePurchased = locked ? canUnmarkThis || isAdmin : true;
+        const canMoveAsParticipant = !!stored && mine > 0 && !locked;
+        const canMove = isAdmin || canMoveAsParticipant;
 
         return (
           <li
@@ -124,10 +142,41 @@ export function ContributionList({
           >
             <div className="flex items-center justify-between gap-2">
               <span className="min-w-0 truncate text-base">{item.name}</span>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1.5">
                 <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-medium text-primary tabular-nums">
                   × {total}
                 </span>
+                {showPurchaseControl &&
+                  (canTogglePurchased ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      disabled={busy}
+                      onClick={() =>
+                        locked
+                          ? canUnmarkThis
+                            ? togglePurchased(item.id, false)
+                            : adminUnmark(item.id)
+                          : togglePurchased(item.id, true)
+                      }
+                      className={cn("h-11 w-11", locked && "border-success/40 text-success")}
+                      aria-label={
+                        locked
+                          ? t.shoppingList.unmarkAria(item.name)
+                          : t.shoppingList.markPurchasedAria(item.name)
+                      }
+                    >
+                      {locked ? <CircleCheck className="size-4" /> : <Circle className="size-4" />}
+                    </Button>
+                  ) : (
+                    <span
+                      className="text-success flex h-11 w-11 items-center justify-center"
+                      aria-label={t.shoppingList.purchasedAria(item.name)}
+                    >
+                      <CircleCheck className="size-4" />
+                    </span>
+                  ))}
                 {!locked && stored && (
                   <Button
                     type="button"
@@ -145,8 +194,29 @@ export function ContributionList({
                     {editing ? <X className="size-4" /> : <Pencil className="size-4" />}
                   </Button>
                 )}
+                {canMove && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={busy}
+                    onClick={() => moveItem(item.id, canMoveAsParticipant)}
+                    className="h-11 w-11"
+                    aria-label={t.common.moveToOtherListAria(item.name)}
+                  >
+                    <ArrowLeftRight className="size-4" />
+                  </Button>
+                )}
               </div>
             </div>
+            {canMarkPurchased && locked && (
+              <div className="text-success flex min-w-0 items-center gap-1 text-xs font-medium">
+                <Lock className="size-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">
+                  {item.purchasedByName ? t.shoppingList.purchasedBy(item.purchasedByName) : null}
+                </span>
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-1.5">
               {item.contributions.map((c) => (
                 <span
@@ -168,56 +238,6 @@ export function ContributionList({
                 </span>
               ))}
             </div>
-            {showPurchaseRow && (
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-success flex min-w-0 items-center gap-1 text-xs font-medium">
-                  {locked && (
-                    <>
-                      <Lock className="size-3.5 shrink-0" aria-hidden="true" />
-                      <span className="truncate">
-                        {item.purchasedByName ? t.shoppingList.purchasedBy(item.purchasedByName) : null}
-                      </span>
-                    </>
-                  )}
-                </span>
-                {!locked && stored && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => togglePurchased(item.id, true)}
-                    className="shrink-0"
-                  >
-                    {t.shoppingList.markPurchased}
-                  </Button>
-                )}
-                {locked && canUnmarkThis && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => togglePurchased(item.id, false)}
-                    className="shrink-0"
-                  >
-                    {t.shoppingList.unmark}
-                  </Button>
-                )}
-                {locked && !canUnmarkThis && isAdmin && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => adminUnmark(item.id)}
-                    className="shrink-0"
-                  >
-                    {t.admin.adminUnmark}
-                  </Button>
-                )}
-              </div>
-            )}
             {editing && stored && (
               <div className="flex items-center justify-end gap-3">
                 <Button

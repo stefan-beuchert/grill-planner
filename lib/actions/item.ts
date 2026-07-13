@@ -106,6 +106,56 @@ export async function setContribution(
   return { success: true as const };
 }
 
+export async function moveItem(
+  slug: string,
+  participantId: string,
+  editToken: string,
+  itemId: string,
+  targetListType: ItemListType,
+) {
+  const t = dictionaries[await getLocale()];
+
+  const [participant, item] = await Promise.all([
+    authorizeParticipant(participantId, editToken),
+    prisma.item.findUnique({ where: { id: itemId }, include: { contributions: true } }),
+  ]);
+  if (!participant) {
+    return { success: false as const, error: t.common.onlyOwnSelections };
+  }
+  if (!item || item.listType === targetListType) {
+    return { success: false as const, error: t.common.itemGone };
+  }
+  if (item.purchased) {
+    return { success: false as const, error: t.common.itemLocked };
+  }
+  // Only someone who contributed to the item can move it — moving is scoped
+  // to "your own items", same as editing a quantity.
+  const isMine = item.contributions.some((c) => c.participantId === participantId);
+  if (!isMine) {
+    return { success: false as const, error: t.common.onlyOwnSelections };
+  }
+
+  const conflict = await prisma.item.findUnique({
+    where: {
+      partyId_listType_name: { partyId: item.partyId, listType: targetListType, name: item.name },
+    },
+  });
+  if (conflict) {
+    return { success: false as const, error: t.common.itemAlreadyOnList };
+  }
+
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      listType: targetListType,
+      category: targetListType === "SHARED_PURCHASE" ? "OTHER" : null,
+    },
+  });
+
+  revalidatePath(`/party/${slug}`);
+  return { success: true as const };
+}
+
 export async function setItemPurchased(
   slug: string,
   participantId: string,

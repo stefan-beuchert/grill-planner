@@ -8,6 +8,7 @@ import { partyFormSchema, type PartyFormValues } from "@/lib/validations/party";
 import { combineDateAndTimeUtc } from "@/lib/party-datetime";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
+import type { ItemListType } from "@/lib/generated/prisma/enums";
 
 export async function adminLogin(passcode: string) {
   const t = dictionaries[await getLocale()];
@@ -93,6 +94,39 @@ export async function adminRemoveContribution(
   if (remaining === 0) {
     await prisma.item.delete({ where: { id: itemId } }).catch(() => {});
   }
+  revalidatePath(`/party/${slug}`);
+  return { success: true as const };
+}
+
+export async function adminMoveItem(
+  slug: string,
+  itemId: string,
+  targetListType: ItemListType,
+) {
+  if (!(await isAdmin())) return { success: false as const };
+
+  const item = await prisma.item.findUnique({ where: { id: itemId } });
+  if (!item || item.listType === targetListType) return { success: false as const };
+
+  // The (partyId, listType, name) constraint means a same-named item might
+  // already sit on the target list — moving would collide, so bail out.
+  const conflict = await prisma.item.findUnique({
+    where: {
+      partyId_listType_name: { partyId: item.partyId, listType: targetListType, name: item.name },
+    },
+  });
+  if (conflict) return { success: false as const };
+
+  await prisma.item.update({
+    where: { id: itemId },
+    data: {
+      listType: targetListType,
+      category: targetListType === "SHARED_PURCHASE" ? "OTHER" : null,
+      purchased: false,
+      purchasedByParticipantId: null,
+    },
+  });
+
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
 }
