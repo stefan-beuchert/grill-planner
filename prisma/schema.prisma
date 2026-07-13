@@ -26,6 +26,12 @@ enum ItemCategory {
 model Party {
   id        String   @id @default(cuid())
   slug      String   @unique
+  /// Held only by the creator's browser (localStorage), never a cookie —
+  /// same trust model as Participant.editToken. Lets whoever created a
+  /// party manage it (edit details, cancel, unmark purchases, remove
+  /// guests/contributions) without needing the app-wide admin passcode.
+  /// A global admin can always do the same for every party regardless.
+  organizerToken String @unique @default(cuid())
   title     String
   startsAt  DateTime
   location  String

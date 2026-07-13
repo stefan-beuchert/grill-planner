@@ -124,19 +124,18 @@ export default async function PartyPage({
               openPoints={party.aiSummaryOpenPoints}
               generatedAt={party.aiSummaryGeneratedAt}
             />
-            {admin && (
-              <AdminPartyControls
-                slug={party.slug}
-                partyId={party.id}
-                defaultValues={{
-                  title: party.title,
-                  date: party.startsAt.toISOString().slice(0, 10),
-                  time: party.startsAt.toISOString().slice(11, 16),
-                  location: party.location,
-                  notes: party.notes ?? "",
-                }}
-              />
-            )}
+            <AdminPartyControls
+              slug={party.slug}
+              partyId={party.id}
+              isAdmin={admin}
+              defaultValues={{
+                title: party.title,
+                date: party.startsAt.toISOString().slice(0, 10),
+                time: party.startsAt.toISOString().slice(11, 16),
+                location: party.location,
+                notes: party.notes ?? "",
+              }}
+            />
             <GeneralNote slug={party.slug} notes={party.notes} />
 
             <ParticipantsSection

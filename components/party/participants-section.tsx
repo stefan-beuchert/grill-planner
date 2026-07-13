@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
+import { useStoredOrganizer } from "@/lib/hooks/use-stored-organizer";
 import { useJoinParty } from "@/lib/hooks/use-join-party";
 import { updateParticipantName } from "@/lib/actions/participant";
 import { adminRemoveGuest } from "@/lib/actions/admin";
@@ -30,7 +31,10 @@ export function ParticipantsSection({
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
   const stored = useStoredParticipant(slug);
+  const organizer = useStoredOrganizer(slug);
+  const canManage = isAdmin || !!organizer;
   const join = useJoinParty(slug);
 
   const me =
@@ -56,14 +60,20 @@ export function ParticipantsSection({
   async function handleRemove(id: string, name: string) {
     if (!window.confirm(t.admin.removeGuestConfirm(name))) return;
     setPendingId(id);
-    await adminRemoveGuest(slug, id);
+    setRemoveError(null);
+    const result = await adminRemoveGuest(slug, id, organizer?.organizerToken);
     setPendingId(null);
+    if (!result.success) {
+      setRemoveError(t.common.actionFailed);
+      return;
+    }
     router.refresh();
   }
 
   return (
     <div className="flex flex-col gap-4">
       <SectionHeading icon={Users}>{t.participants.heading}</SectionHeading>
+      {removeError && <p className="text-destructive text-sm">{removeError}</p>}
 
       {participants.length === 0 ? (
         <p className="text-muted-foreground text-sm">{t.participants.empty}</p>
@@ -95,7 +105,7 @@ export function ParticipantsSection({
                     {t.participants.rename}
                   </button>
                 )}
-                {isAdmin && (
+                {canManage && (
                   <button
                     type="button"
                     disabled={pendingId === p.id}

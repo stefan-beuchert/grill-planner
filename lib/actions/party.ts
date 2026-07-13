@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
@@ -52,7 +51,12 @@ export async function createParty(values: PartyFormValues) {
     },
   });
 
-  redirect(`/party/${party.slug}`);
+  revalidatePath(`/party/${slug}`);
+  return {
+    success: true as const,
+    slug: party.slug,
+    organizerToken: party.organizerToken,
+  };
 }
 
 export async function setPartyNote(

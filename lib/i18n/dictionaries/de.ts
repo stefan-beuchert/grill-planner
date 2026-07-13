@@ -10,6 +10,7 @@ export const de = {
     itemGone: "Diesen Artikel gibt es nicht mehr.",
     itemLocked: "Dieser Artikel wurde bereits gekauft und ist gesperrt.",
     invalidNote: "Die Notiz ist zu lang.",
+    actionFailed: "Das hat nicht geklappt. Bitte versuche es erneut.",
     save: "Speichern",
     cancel: "Abbrechen",
     fewerAria: (name: string) => `Weniger ${name}`,
@@ -156,6 +157,7 @@ export const de = {
     notAdmin: "Admin-Sitzung erforderlich.",
     logout: "Abmelden",
     badge: "Admin",
+    organizerBadge: "Organisator",
     noParties: "Noch keine Partys.",
     participantsCount: (n: number) => `${n} ${n === 1 ? "Gast" : "Gäste"}`,
     deleteParty: "Löschen",
@@ -213,5 +215,10 @@ export const de = {
       96: "Gewitter mit Hagel",
       99: "Gewitter mit Hagel",
     } as Record<number, string>,
+  },
+  error: {
+    heading: "Etwas ist schiefgelaufen.",
+    body: "Bitte versuche es erneut. Falls das Problem bleibt, versuche es später noch einmal.",
+    retry: "Erneut versuchen",
   },
 };

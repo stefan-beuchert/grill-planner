@@ -66,6 +66,7 @@ A single grill party. `slug` is the unguessable public id used in the shareable 
 |---|---|---|
 | `id` | `String` | @id @default(cuid()) |
 | `slug` | `String` | @unique |
+| `organizerToken` | `String` | Held only by the creator's browser (localStorage), never a cookie — same trust model as Participant.editToken. Lets whoever created a party manage it (edit details, cancel, unmark purchases, remove guests/contributions) without needing the app-wide admin passcode. A global admin can always do the same for every party regardless. — @unique @default(cuid()) |
 | `title` | `String` | — |
 | `startsAt` | `DateTime` | — |
 | `location` | `String` | — |
@@ -147,10 +148,10 @@ One participant's pledged quantity toward an Item. An item's displayed total is 
 
 ---
 
-## Auth: two independent, account-less mechanisms
+## Auth: three independent, account-less mechanisms
 
-Neither exists in a `sessions` table — both are stateless-verifiable, which
-matches the product's no-accounts constraint.
+None of these exist in a `sessions` table — all three are
+stateless-verifiable, which matches the product's no-accounts constraint.
 
 **Participant identity** (`lib/participant-auth.ts`): joining a party
 creates a `Participant` row with a random `editToken` (cuid). That token is
@@ -163,18 +164,45 @@ takes `(participantId, editToken)` as arguments and calls
 `authorizeParticipant` to confirm they match before writing anything. There
 is no session — every call re-proves ownership.
 
-**Admin** (`lib/admin-auth.ts`): a single shared passcode
-(`ADMIN_PASSCODE` env var), not per-user. Logging in sets an HTTP-only
-cookie whose value is `HMAC-SHA256("grill-planner-admin", key=ADMIN_PASSCODE)`
-— a fixed, deterministic token that only someone who knows the passcode
-server-side could produce, so it can't be forged by setting an arbitrary
-cookie value in devtools, without needing a session table. `isAdmin()`
-recomputes the expected HMAC and compares with `timingSafeEqual`.
+**Organizer identity** (`lib/organizer-auth.ts`): the same pattern, one
+level up — each `Party` gets its own random `organizerToken` (cuid) at
+creation. `createParty` returns it once to the creator's browser, which
+stores it in `localStorage` (`lib/organizer-storage.ts`, keyed by slug,
+mirroring participant storage exactly). This is what lets whoever created a
+party manage it — edit details, cancel it, unmark a purchase, remove a
+contribution or guest — without needing the app-wide admin passcode.
+Nobody else's browser ever has it, and the server never sends it back out
+after creation.
 
-These two are independent: an admin isn't automatically a joined
-participant (and vice versa). A few actions accept *either* — e.g. `moveItem`
-in `contribution-list.tsx` chooses the participant-authorized path when the
-viewer contributed to that item, falling back to the admin path otherwise.
+**Admin** (`lib/admin-auth.ts`): a single shared passcode
+(`ADMIN_PASSCODE` env var), not per-user, valid across *every* party.
+Logging in sets an HTTP-only cookie whose value is
+`HMAC-SHA256("grill-planner-admin", key=ADMIN_PASSCODE)` — a fixed,
+deterministic token that only someone who knows the passcode server-side
+could produce, so it can't be forged by setting an arbitrary cookie value
+in devtools, without needing a session table. `isAdmin()` recomputes the
+expected HMAC and compares with `timingSafeEqual`.
+
+**How the per-party admin actions in `lib/actions/admin.ts` combine these:**
+`adminUpdateParty`, `adminCancelParty`, `adminUnmarkPurchased`,
+`adminRemoveContribution`, `adminRemoveGuest`, and `adminMoveItem` all take
+an optional `organizerToken` and check `canManageParty(slug, organizerToken)`
+(`lib/organizer-auth.ts`) — true if the caller is either the global admin
+*or* holds that specific party's organizer token. Cross-party actions
+(`adminDeleteParty`, the admin dashboard's "list every party" view) stay
+global-admin-only via `isAdmin()` directly — there's no per-party equivalent
+of "manage everything." UI components that render these controls
+(`AdminPartyControls`, `ParticipantsSection`, `ContributionList`) read
+`useStoredOrganizer(slug)` client-side and compute
+`canManage = isAdmin || !!organizer` to decide what to show — the
+`isAdmin` prop is still server-computed and passed down as before, but the
+organizer half is only ever known in the browser holding that token.
+
+A few participant-vs-admin-or-organizer actions accept either identity and
+prefer the participant path when available — e.g. `moveItem` in
+`contribution-list.tsx` uses the participant-authorized path when the
+viewer contributed to that item, falling back to the admin/organizer path
+otherwise.
 
 ---
 
@@ -210,6 +238,36 @@ Illustrates the general pattern (Server Component fetch → Client Component
 
 ---
 
+## Error handling
+
+Two layers, for two different failure modes:
+
+**Expected failures** (wrong edit token, item already locked, name already
+taken, an unexpected Prisma error) — every Server Action returns
+`{success: true, ...} | {success: false, error?: string}` rather than
+throwing. Mutating Prisma calls are wrapped in `try/catch` with a
+`console.error(context, err)` (context = the slug/itemId/participantId
+involved — the framework's own stack trace tells you *where* it broke, this
+is what tells you *which party's data* it was), converting an unexpected
+DB error into the same `{success: false}` shape as a validation failure
+rather than an uncaught exception. Client components check `result.success`
+and show `result.error` (falling back to the generic
+`t.common.actionFailed`) inline near the control that failed —
+`contribution-list.tsx`'s `errorMessageFrom` helper handles the fact that
+some actions carry a specific error string and others (the plain
+admin/organizer ones) don't.
+
+**Unexpected failures during rendering** (something throws while a Server
+or Client Component renders, not inside an action) — `app/error.tsx` is the
+route-segment error boundary Next.js renders instead of the page; it's a
+Client Component so it can still use `useI18n()` (the root layout's
+`I18nProvider` stays mounted above it). `app/global-error.tsx` covers the
+rarer case of the root layout itself throwing — layout.tsx doesn't render
+at all then, so it can't rely on any context and renders its own bare
+`<html>/<body>` with hardcoded bilingual text instead.
+
+---
+
 ## Dev environment
 
 See [README.md](./README.md) for setup commands. Notable non-obvious bits
@@ -224,3 +282,37 @@ See [README.md](./README.md) for setup commands. Notable non-obvious bits
   old in-memory Prisma Client and throws on newly added fields.
 - Ordinary source edits need no Docker command at all — Turbopack watches
   the bind-mounted source directly.
+
+---
+
+## Testing
+
+Not a coverage crusade — enough of a tripwire that a change can't silently
+break the two properties that matter most: the contribution-ledger math and
+the "can only edit/manage your own stuff" auth boundaries.
+
+**Unit tests** (`lib/**/*.test.ts`, run via Vitest — `npm run test`) hit a
+real Postgres database (`TEST_DATABASE_URL`, a separate `grillplanner_test`
+database on the same Postgres instance — see `docker-compose.yml`), not a
+mocked Prisma client, so they exercise real query behavior. `vitest.config.ts`
+overrides `DATABASE_URL` for the test process specifically so tests can never
+touch dev data, and `tests/global-setup.ts` runs `prisma migrate deploy`
+against that database once before the suite. `tests/fixtures.ts` has the
+shared "create a throwaway party/participant" helpers. Server Actions call
+`next/headers`'s `cookies()` and `next/cache`'s `revalidatePath` as a matter
+of course, both of which need a live Next.js request context that doesn't
+exist in a plain test run — test files that exercise those actions mock
+both modules (see `lib/actions/item.test.ts`).
+
+**One e2e smoke test** (`tests/e2e/golden-path.spec.ts`, Playwright —
+`npm run test:e2e`) drives the actual running dev server through the golden
+path (create a party → join → add a shared item → mark it purchased) and
+cleans up the one party it creates via a raw `pg` query afterward — deliberately
+*not* the app's Prisma client, since Playwright's test transform is
+CJS-oriented and can't load the generated Prisma client (ESM-only). This
+runs against the real dev database, not the isolated test one, since it's
+testing the deployed app end-to-end rather than one function in isolation.
+Playwright's browser binary lives in its own named volume
+(`playwright_cache`), not the image, so it needs a one-time
+`npx playwright install --with-deps chromium` per environment (see
+README.md) rather than bloating every image build.

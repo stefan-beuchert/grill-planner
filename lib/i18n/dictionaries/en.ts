@@ -12,6 +12,7 @@ export const en: Dictionary = {
     itemGone: "That item no longer exists.",
     itemLocked: "This item has already been purchased and is locked.",
     invalidNote: "Note is too long.",
+    actionFailed: "That didn't work. Please try again.",
     save: "Save",
     cancel: "Cancel",
     fewerAria: (name: string) => `Fewer ${name}`,
@@ -157,6 +158,7 @@ export const en: Dictionary = {
     notAdmin: "Admin session required.",
     logout: "Log out",
     badge: "Admin",
+    organizerBadge: "Organizer",
     noParties: "No parties yet.",
     participantsCount: (n: number) => `${n} guest${n === 1 ? "" : "s"}`,
     deleteParty: "Delete",
@@ -212,5 +214,10 @@ export const en: Dictionary = {
       96: "Thunderstorm with hail",
       99: "Thunderstorm with hail",
     },
+  },
+  error: {
+    heading: "Something went wrong.",
+    body: "Please try again. If the problem persists, try again later.",
+    retry: "Try again",
   },
 };

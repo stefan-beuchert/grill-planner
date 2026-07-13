@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { adminUpdateParty, adminCancelParty } from "@/lib/actions/admin";
+import { useStoredOrganizer } from "@/lib/hooks/use-stored-organizer";
 import { partyFormSchema, type PartyFormValues } from "@/lib/validations/party";
 import { useI18n } from "@/lib/i18n/locale-context";
 
@@ -16,13 +17,16 @@ export function AdminPartyControls({
   slug,
   partyId,
   defaultValues,
+  isAdmin = false,
 }: {
   slug: string;
   partyId: string;
   defaultValues: PartyFormValues;
+  isAdmin?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
+  const organizer = useStoredOrganizer(slug);
   const [editing, setEditing] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const schema = useMemo(() => partyFormSchema(t), [t]);
@@ -32,9 +36,13 @@ export function AdminPartyControls({
     formState: { errors, isSubmitting },
   } = useForm<PartyFormValues>({ resolver: zodResolver(schema), defaultValues });
 
+  // Global admin (known server-side) or this party's organizer (known only
+  // client-side, via localStorage) — either can manage this one party.
+  if (!isAdmin && !organizer) return null;
+
   async function onSubmit(values: PartyFormValues) {
     setServerError(null);
-    const result = await adminUpdateParty(slug, partyId, values);
+    const result = await adminUpdateParty(slug, partyId, values, organizer?.organizerToken);
     if (!result.success) {
       setServerError(result.error);
       return;
@@ -45,14 +53,20 @@ export function AdminPartyControls({
 
   async function handleCancelParty() {
     if (!window.confirm(t.admin.cancelPartyConfirm)) return;
-    await adminCancelParty(partyId);
+    setServerError(null);
+    const result = await adminCancelParty(slug, partyId, organizer?.organizerToken);
+    // On success this redirects and never returns here.
+    if (result && !result.success) {
+      setServerError(t.common.actionFailed);
+    }
   }
 
   return (
     <div className="border-destructive/30 flex flex-col gap-3 rounded-xl border p-3">
       <span className="text-destructive text-xs font-semibold tracking-wide uppercase">
-        {t.admin.badge}
+        {isAdmin ? t.admin.badge : t.admin.organizerBadge}
       </span>
+      {serverError && <p className="text-destructive text-sm">{serverError}</p>}
 
       {!editing ? (
         <div className="flex gap-2">
@@ -91,7 +105,6 @@ export function AdminPartyControls({
             <Label htmlFor="admin-notes">{t.createPartyForm.notesLabel}</Label>
             <Textarea id="admin-notes" className="min-h-20" {...register("notes")} />
           </div>
-          {serverError && <p className="text-destructive text-sm">{serverError}</p>}
           <div className="flex gap-2">
             <Button type="submit" disabled={isSubmitting} size="sm">
               {t.admin.saveDetails}

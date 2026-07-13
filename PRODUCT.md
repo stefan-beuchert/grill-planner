@@ -1,4 +1,4 @@
-# Grill Planner — Product Vision (v4 in progress)
+# Grill Planner — Product Vision (v5 in progress)
 
 Version 1 taught us something the original spec didn't anticipate: a BBQ has
 two fundamentally different kinds of "stuff" — things the group needs to buy
@@ -130,46 +130,65 @@ coordination contexts) — e.g. "please bring your own plates and cups."
 
 ---
 
-## Admin Mode
+## Admin Mode & Party Organizers
 
-A single 4-digit passcode (set once by the app owner, not per-party)
-unlocks admin mode on a device — no separate hidden URL to remember or
-manage.
+**v5** replaces the pure single-passcode model with two layers: whoever
+*creates* a party is automatically its **organizer**, with the same
+correction/cleanup powers over that one party that used to require the
+app-wide passcode. The passcode still exists as a **global admin** layer on
+top, for cross-party maintenance.
 
-While in admin mode:
+**Party Organizer** (automatic, no passcode): the device that created a
+party can, for that party only —
 
-- See an **overview of every party** that exists in the app (title, date,
-  participant count), with the ability to **delete** any of them. This is
-  how test parties and abandoned ones get cleaned up.
 - **Edit party details** (title, date, time, location, notes) or **cancel**
-  any individual party.
+  the party.
 - **Unmark any purchased item**, even one purchased by someone else — the
-  admin override for a stuck/locked item.
+  correction for a stuck/locked item.
 - **Edit or remove any contribution** on the Shopping List or Things People
   Bring, even one added by someone else — the fix for a wrong, orphaned, or
   unreachable contributor's pledge (e.g. someone drops out but can't update
   what they said they'd bring).
-- **Remove any guest** from a party — e.g. a duplicate entry, or someone who
-  was added by mistake.
+- **Remove any guest** from the party — e.g. a duplicate entry, or someone
+  who was added by mistake.
+
+This is tied to the browser that created the party, not an account — if
+that browser's storage is cleared, organizer access to that party is lost
+(there's no recovery flow yet; the global admin passcode is the fallback).
+Parties created before v5 have no organizer holder and remain
+admin-only-manageable.
+
+**Global Admin** (a single 4-digit passcode, set once by the app owner, not
+per-party) unlocks everything a party organizer can do, for *every* party,
+plus two things no organizer can do:
+
+- See an **overview of every party** that exists in the app (title, date,
+  participant count), with the ability to **delete** any of them. This is
+  how test parties and abandoned ones get cleaned up.
+- Manage a party whose organizer access was lost (cleared storage,
+  pre-v5 party, etc).
 
 Everything else stays open exactly as described above: any participant can
 still add themselves as a guest, contribute to the Shopping List or Things
-People Bring, and mark Shopping List items purchased, without needing the
-passcode. Admin Mode exists purely as a correction/cleanup layer on top of
-that open model, not a gate on normal use.
+People Bring, and mark Shopping List items purchased, without needing
+organizer or admin access. Both layers exist purely as a
+correction/cleanup layer on top of that open model, not a gate on normal
+use.
 
 **Known trade-offs:**
 
-- Editing a party's core details or cancelling it is only possible for
-  whoever holds the passcode — today, that's just the app owner. If this
-  app is ever used by multiple independent hosts rather than mostly by one
-  person, per-party creator rights would need revisiting. Acceptable for
-  now since that's not the current usage pattern.
-- A 4-digit passcode is a small keyspace (10,000 combinations) guarding
-  delete-everything power, with no separate account or rate-limiting
-  concept in this app. Acceptable for a small trusted-friends tool; would
-  need strengthening (longer code, rate limiting) if the app were ever
-  opened up beyond people you know.
+- Organizer access has no recovery mechanism — losing it (cleared browser
+  storage, different device) means falling back to the admin passcode.
+  Acceptable for a small trusted-friends tool where the app owner is
+  reachable; would need a recovery flow (e.g. a magic link) if organizers
+  are ever people the app owner can't personally help.
+- A 4-digit admin passcode is a small keyspace (10,000 combinations)
+  guarding delete-everything-across-every-party power, with no rate
+  limiting. The v5 organizer model removes most of the day-to-day pressure
+  on this passcode (most corrections no longer need it at all), but the
+  passcode itself is unchanged — would still need strengthening (longer
+  code, rate limiting) if the app were ever opened up beyond people you
+  know.
 
 ---
 

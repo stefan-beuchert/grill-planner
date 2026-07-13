@@ -6,6 +6,7 @@ import { ArrowLeftRight, Check, Circle, CircleCheck, Lock, Minus, Pencil, Plus, 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
+import { useStoredOrganizer } from "@/lib/hooks/use-stored-organizer";
 import { moveItem as moveItemAction, setContribution, setItemPurchased } from "@/lib/actions/item";
 import { adminMoveItem, adminRemoveContribution, adminUnmarkPurchased } from "@/lib/actions/admin";
 import { useI18n } from "@/lib/i18n/locale-context";
@@ -40,13 +41,19 @@ export function ContributionList({
   const { t } = useI18n();
   const router = useRouter();
   const stored = useStoredParticipant(slug);
+  const organizer = useStoredOrganizer(slug);
+  const canManage = isAdmin || !!organizer;
   const [pendingId, setPendingId] = useState<string | null>(null);
   // Only one row can be in edit mode at a time. Opening a different row's
   // editor discards whatever draft quantity the previous row had.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftQty, setDraftQty] = useState(0);
+  // Actions used to be fire-and-forget — a rejected action (locked item,
+  // stale token, server error) failed silently from the user's point of
+  // view. Track which row's action failed and show it inline instead.
+  const [rowError, setRowError] = useState<{ itemId: string; message: string } | null>(null);
 
-  if (!stored && !isAdmin) {
+  if (!stored && !canManage) {
     return <p className="text-muted-foreground text-sm">{joinPrompt}</p>;
   }
 
@@ -54,7 +61,24 @@ export function ContributionList({
     return <p className="text-muted-foreground text-sm">{emptyText}</p>;
   }
 
+  // Some actions (setContribution, setItemPurchased, moveItem) return a
+  // specific error string; others (the plain admin/organizer ones) return
+  // just {success:false} — this covers both without fighting TS's union
+  // narrowing across mismatched result shapes.
+  function errorMessageFrom(result: unknown): string {
+    if (
+      result &&
+      typeof result === "object" &&
+      "error" in result &&
+      typeof (result as { error: unknown }).error === "string"
+    ) {
+      return (result as { error: string }).error;
+    }
+    return t.common.actionFailed;
+  }
+
   function toggleEditing(itemId: string, currentMine: number) {
+    setRowError(null);
     if (editingId === itemId) {
       // Tapping the edit icon again on the same row closes it without
       // saving — the draft quantity is discarded.
@@ -73,43 +97,67 @@ export function ContributionList({
       return;
     }
     setPendingId(itemId);
-    await setContribution(slug, stored.participantId, stored.editToken, itemId, draftQty);
+    setRowError(null);
+    const result = await setContribution(slug, stored.participantId, stored.editToken, itemId, draftQty);
     setPendingId(null);
+    if (!result.success) {
+      setRowError({ itemId, message: errorMessageFrom(result) });
+      return;
+    }
     setEditingId(null);
     router.refresh();
   }
 
   async function removeContribution(itemId: string, participantId: string) {
     setPendingId(itemId);
-    await adminRemoveContribution(slug, itemId, participantId);
+    setRowError(null);
+    const result = await adminRemoveContribution(slug, itemId, participantId, organizer?.organizerToken);
     setPendingId(null);
+    if (!result.success) {
+      setRowError({ itemId, message: errorMessageFrom(result) });
+      return;
+    }
     router.refresh();
   }
 
   async function togglePurchased(itemId: string, purchased: boolean) {
     if (!stored) return;
     setPendingId(itemId);
-    await setItemPurchased(slug, stored.participantId, stored.editToken, itemId, purchased);
+    setRowError(null);
+    const result = await setItemPurchased(slug, stored.participantId, stored.editToken, itemId, purchased);
     setPendingId(null);
+    if (!result.success) {
+      setRowError({ itemId, message: errorMessageFrom(result) });
+      return;
+    }
     router.refresh();
   }
 
   async function adminUnmark(itemId: string) {
     setPendingId(itemId);
-    await adminUnmarkPurchased(slug, itemId);
+    setRowError(null);
+    const result = await adminUnmarkPurchased(slug, itemId, organizer?.organizerToken);
     setPendingId(null);
+    if (!result.success) {
+      setRowError({ itemId, message: errorMessageFrom(result) });
+      return;
+    }
     router.refresh();
   }
 
   async function moveItem(itemId: string, asParticipant: boolean) {
     setPendingId(itemId);
+    setRowError(null);
     const target = listType === "SHARED_PURCHASE" ? "BRING_YOUR_OWN" : "SHARED_PURCHASE";
-    if (asParticipant && stored) {
-      await moveItemAction(slug, stored.participantId, stored.editToken, itemId, target);
-    } else {
-      await adminMoveItem(slug, itemId, target);
-    }
+    const result =
+      asParticipant && stored
+        ? await moveItemAction(slug, stored.participantId, stored.editToken, itemId, target)
+        : await adminMoveItem(slug, itemId, target, organizer?.organizerToken);
     setPendingId(null);
+    if (!result.success) {
+      setRowError({ itemId, message: errorMessageFrom(result) });
+      return;
+    }
     router.refresh();
   }
 
@@ -126,9 +174,9 @@ export function ContributionList({
         const editing = editingId === item.id;
         const canUnmarkThis = stored?.participantId === item.purchasedByParticipantId;
         const showPurchaseControl = canMarkPurchased && (locked || !!stored);
-        const canTogglePurchased = locked ? canUnmarkThis || isAdmin : true;
+        const canTogglePurchased = locked ? canUnmarkThis || canManage : true;
         const canMoveAsParticipant = !!stored && mine > 0 && !locked;
-        const canMove = isAdmin || canMoveAsParticipant;
+        const canMove = canManage || canMoveAsParticipant;
 
         return (
           <li
@@ -209,6 +257,9 @@ export function ContributionList({
                 )}
               </div>
             </div>
+            {rowError?.itemId === item.id && (
+              <p className="text-destructive text-xs">{rowError.message}</p>
+            )}
             {canMarkPurchased && locked && (
               <div className="text-success flex min-w-0 items-center gap-1 text-xs font-medium">
                 <Lock className="size-3.5 shrink-0" aria-hidden="true" />
@@ -224,7 +275,7 @@ export function ContributionList({
                   className="bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
                 >
                   {c.participantName} {c.quantity}
-                  {isAdmin && (
+                  {canManage && (
                     <button
                       type="button"
                       disabled={busy}
