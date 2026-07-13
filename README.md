@@ -37,6 +37,12 @@ docker compose exec app npm run docs:generate  # regenerate ARCHITECTURE.md's Da
 
 Production deploys to Vercel, connecting to a real Supabase Postgres
 instance — see `.env.example` for the connection string format used there.
+The `build` script runs `prisma migrate deploy` before `next build`, so
+every deploy applies pending schema migrations to production automatically,
+in the correct order (migration first, new code second) — no manual step
+needed. If the migration fails, the build fails with it, and Vercel simply
+doesn't promote the new deployment — the previous working version stays
+live.
 
 ## Testing
 
