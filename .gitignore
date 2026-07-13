@@ -44,3 +44,8 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# claude code local settings — personal permission allowlist, can contain
+# command strings with locally-used credentials embedded (e.g. one-off
+# Supabase migration commands) that must never reach git history
+.claude/settings.local.json

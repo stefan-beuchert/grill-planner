@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 ## Project
 
@@ -55,6 +55,10 @@ Use:
     - database
 
 Prefer maintainability over cleverness.
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for how the app is actually put
+together today (data model, auth mechanisms, external services, request
+flow) and [PRODUCT.md](./PRODUCT.md) for the product rules/behavior spec.
 
 ---
 
@@ -251,6 +255,29 @@ Avoid
 
 Refactor when duplication appears.
 
+**Established, but not yet universal, patterns worth knowing before touching
+these areas:**
+
+- Server Actions return `{success: true, ...} | {success: false, error?: string}`
+  rather than throwing, everywhere. Mutating Prisma calls in
+  `lib/actions/item.ts` and `lib/actions/admin.ts` are additionally wrapped
+  in `try/catch` with `console.error("<actionName> failed", {context}, err)`
+  — this is the pattern to extend, not the `lib/actions/party.ts` /
+  `participant.ts` / `ride.ts` style (no try/catch at all) or
+  `ai-summary.ts`'s (bare `catch {}`, no logging). Bringing those three
+  files up to the `item.ts`/`admin.ts` standard is a reasonable thing to do
+  *while already touching them* for another reason — not a standalone
+  cleanup task.
+- Every user-facing string goes through `t.<namespace>.<key>` —
+  `lib/i18n/dictionaries/de.ts` and `en.ts` must be updated together, never
+  just one.
+- Zod schemas live in `lib/validations/`, never inline in an action or form.
+- Server Action names are verb-first camelCase (`setContribution`,
+  `addItem`, `joinParty`); validation schema factories are `xSchema`
+  (`itemNameSchema`); their inferred types are `XValues` (`ItemNameValues`).
+- Components: PascalCase function in a kebab-case file
+  (`contribution-list.tsx` exports `ContributionList`).
+
 ---
 
 # Development
@@ -290,6 +317,52 @@ change actually requires it:
 - `docker compose down && up` should be rare — it recreates the network and,
   unlike a plain `restart`, is ~5-10x slower. It's for when the stack is
   genuinely in a broken state, not a routine step between edits.
+
+---
+
+# AI Agent Workflow
+
+For a small, obvious change (a copy tweak, a one-line fix, adding a single
+i18n string), just follow the "Development" checklist above directly —
+spinning up the full pipeline below is overhead a small change doesn't need.
+
+For a real feature or bug fix, this repo has seven role-specific subagents
+in `.claude/agents/`, each pre-loaded with this project's actual
+conventions (not generic advice) so it doesn't have to be re-derived every
+session:
+
+```
+Feature request
+  → Repository Analyst   (only if it's unclear where the change belongs —
+                           skip straight to Planner otherwise)
+  → Planner               (produces a plan: files, risks, complexity — no edits)
+  → Software Engineer     (implements the plan, nothing more)
+  → Reviewer              (findings list — report only, doesn't fix)
+  → Software Engineer     (addresses findings — same agent, not a debate loop)
+  → QA Engineer           (verifies acceptance criteria, adds missing tests,
+                           runs the *relevant* validation, not the full suite)
+  → Done
+```
+
+**DevOps Engineer** and **Documentation Engineer** sit outside this linear
+pipeline — invoke them directly for their respective concerns (a
+Docker/Compose/CI change, a docs-only update), not as a stage every feature
+passes through. Most features never touch either.
+
+| Agent | Use for |
+|---|---|
+| `repository-analyst` | "Where does X live?" / "How does Y work?" — fast, read-only |
+| `planner` | Turning a feature request into files-to-touch + risks + complexity |
+| `software-engineer` | Implementing a planned change |
+| `reviewer` | Reviewing a diff before it's considered done |
+| `qa-engineer` | Checking acceptance criteria, writing/running tests |
+| `devops-engineer` | Docker, Compose, build/test infra, CI |
+| `docs-engineer` | Keeping CLAUDE.md / ARCHITECTURE.md / PRODUCT.md / README.md current |
+
+Each stage should produce one focused output for the next stage to act on —
+not an extended back-and-forth. If a reviewer/QA finding requires real
+back-and-forth debate about approach, that's a signal to stop and involve
+the person driving the session, not to loop the agents against each other.
 
 ---
 

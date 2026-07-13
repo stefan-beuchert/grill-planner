@@ -1,7 +1,7 @@
 # Grill Planner
 
 A small, mobile-first app for organizing a BBQ with friends — no accounts,
-just a shareable link. See [AGENTS.md](./AGENTS.md) for stack/conventions,
+just a shareable link. See [CLAUDE.md](./CLAUDE.md) for stack/conventions,
 [PRODUCT.md](./PRODUCT.md) for the product spec, and
 [ARCHITECTURE.md](./ARCHITECTURE.md) for how it's built.
 

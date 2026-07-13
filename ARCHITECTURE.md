@@ -4,12 +4,12 @@ Technical reference for how Grill Planner is put together — *what* exists
 and *how the pieces connect*. For *why* the product works the way it does
 (the contribution-ledger rules, tab layout, design principles), see
 [PRODUCT.md](./PRODUCT.md). For stack choices and coding conventions, see
-[AGENTS.md](./AGENTS.md). For running it locally, see [README.md](./README.md).
+[CLAUDE.md](./CLAUDE.md). For running it locally, see [README.md](./README.md).
 
 **Keep this file current.** When a change affects the data model, an auth
 mechanism, an external service, or how a request flows through the app,
 update the relevant section here in the same commit — see the "Development"
-checklist in AGENTS.md.
+checklist in CLAUDE.md.
 
 ---
 
