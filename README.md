@@ -37,3 +37,22 @@ docker compose exec app npm run docs:generate  # regenerate ARCHITECTURE.md's Da
 
 Production deploys to Vercel, connecting to a real Supabase Postgres
 instance — see `.env.example` for the connection string format used there.
+
+## Testing
+
+```bash
+docker compose exec app npm run test       # unit tests (Vitest) — real
+                                            # queries against grillplanner_test,
+                                            # a separate database (see
+                                            # docker-compose.yml), never dev data
+docker compose exec app npm run test:e2e   # e2e smoke test (Playwright), against
+                                            # the running dev server — one-time
+                                            # setup below
+```
+
+Playwright's browser binary lives in its own named volume, not the image
+(keeps the dev image lean) — install it once per environment:
+
+```bash
+docker compose exec app npx playwright install --with-deps chromium
+```
