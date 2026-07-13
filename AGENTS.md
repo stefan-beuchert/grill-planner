@@ -260,10 +260,36 @@ Whenever implementing a feature:
 1. Explain the implementation plan.
 2. Implement.
 3. Check for obvious issues.
-4. Suggest improvements if appropriate.
+4. If the change affects the data model, an auth mechanism, an external
+   service, or how a request flows through the app, update the relevant
+   section of [ARCHITECTURE.md](./ARCHITECTURE.md) in the same commit. If
+   it changed `prisma/schema.prisma`, also run
+   `docker compose exec app npm run docs:generate` to regenerate the Data
+   Model section from the schema's own doc-comments — don't hand-edit that
+   section. If it changes product-facing behavior/rules, update
+   [PRODUCT.md](./PRODUCT.md) too.
+5. Suggest improvements if appropriate.
 
 Keep commits small.
 Everything should run with Docker Compose.
+
+**Iteration speed: don't restart the containers for ordinary source edits.**
+`docker-compose.yml` bind-mounts the repo into the `app` container and Next.js
+(Turbopack) watches it directly — saving a file is picked up in place, no
+Docker command needed at all. Reach for a heavier command only when the
+change actually requires it:
+
+- Edited a `.tsx`/`.ts` file, styles, translations → nothing. Just save.
+- Changed `prisma/schema.prisma` → `docker compose exec app npx prisma
+  migrate dev` (or `generate`) **then** `docker compose restart app` — the
+  running dev server keeps its old in-memory Prisma client otherwise.
+- Changed an env var in `docker-compose.yml` → `docker compose restart app`
+  (~3s).
+- Changed `package.json`/lockfile or the `Dockerfile` → `docker compose build
+  app` (only this service needs rebuilding).
+- `docker compose down && up` should be rare — it recreates the network and,
+  unlike a plain `restart`, is ~5-10x slower. It's for when the stack is
+  genuinely in a broken state, not a routine step between edits.
 
 ---
 

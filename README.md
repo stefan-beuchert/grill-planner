@@ -1,8 +1,9 @@
 # Grill Planner
 
 A small, mobile-first app for organizing a BBQ with friends — no accounts,
-just a shareable link. See [AGENTS.md](./AGENTS.md) for the full product
-and architecture brief.
+just a shareable link. See [AGENTS.md](./AGENTS.md) for stack/conventions,
+[PRODUCT.md](./PRODUCT.md) for the product spec, and
+[ARCHITECTURE.md](./ARCHITECTURE.md) for how it's built.
 
 ## Getting started
 
@@ -31,6 +32,7 @@ docker compose exec app npx prisma studio   # inspect data in the browser
 docker compose logs -f app                  # follow app logs
 docker compose down                         # stop everything
 docker compose down -v                      # stop and wipe local DB data
+docker compose exec app npm run docs:generate  # regenerate ARCHITECTURE.md's Data Model section from schema.prisma
 ```
 
 Production deploys to Vercel, connecting to a real Supabase Postgres
