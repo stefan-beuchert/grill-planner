@@ -318,6 +318,39 @@ change actually requires it:
   unlike a plain `restart`, is ~5-10x slower. It's for when the stack is
   genuinely in a broken state, not a routine step between edits.
 
+**Testing on your phone (LAN):** `docker-compose.yml` already publishes the
+dev server on `0.0.0.0:3000`, so it's reachable from any device on the same
+WiFi — no deploy needed. Find the current LAN IP with (PowerShell):
+
+```
+Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "169.254.*" -and $_.IPAddress -ne "127.0.0.1" }
+```
+
+— look for the real WLAN/Ethernet adapter (not `vEthernet (WSL ...)` or a
+VPN adapter like `NordLynx`), then open `http://<that-ip>:3000` on the
+phone. It's DHCP-assigned and can change (e.g. after a reboot), so re-run
+the lookup if it stops connecting. If the phone still can't reach it on the
+same WiFi: check whether a VPN client (e.g. NordVPN) has LAN
+access/discovery disabled, and whether the WiFi network is classified
+Private in Windows (`Get-NetConnectionProfile`) rather than Public — Docker
+Desktop's firewall rule blocks inbound on Public.
+
+On this network, none of the above was enough — LAN access from a phone
+stayed unreachable (`ERR_CONNECTION_ABORTED`) even with the network set to
+Private, NordVPN fully disconnected, and Windows Firewall confirmed clear
+(tested with a plain Python server outside Docker entirely, same result),
+which points at router-level client/AP isolation rather than anything in
+this repo or on this machine. Not pursued further. **Fallback: check
+changes in a browser on this machine itself** (`http://localhost:3000`) —
+slower than a phone for the "outdoor readability" gut-check, but everything
+else about the fast local loop (hot reload, `/party/demo`) still applies.
+
+**Demo data:** `docker compose exec app npm run db:seed` (re)creates a
+fixed party at `/party/demo` with guests, shopping list items (including a
+purchased one), things-people-bring items, ride info, and notes already
+filled in — safe to re-run any time, it resets to the same known state.
+Use this instead of creating a fresh party by hand for routine UI checks.
+
 ---
 
 # AI Agent Workflow
@@ -325,6 +358,16 @@ change actually requires it:
 For a small, obvious change (a copy tweak, a one-line fix, adding a single
 i18n string), just follow the "Development" checklist above directly —
 spinning up the full pipeline below is overhead a small change doesn't need.
+
+For a purely cosmetic change — a color, an icon swap, a spacing/margin
+value, font size, or similar with no logic/behavior change — just make the
+edit directly. Skip typecheck/lint/the test suite/e2e and the
+browser-screenshot verification loop; trust the change and let the user
+eyeball it live over the LAN dev URL themselves (see "Testing on your
+phone" above). The moment a change touches a Server Action, a conditional,
+validation, the data model, or anything else that could behave differently
+rather than just look different, it's no longer cosmetic and gets the full
+treatment from the "Development" checklist above.
 
 For a real feature or bug fix, this repo has seven role-specific subagents
 in `.claude/agents/`, each pre-loaded with this project's actual
