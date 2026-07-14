@@ -1,4 +1,4 @@
-# Grill Planner — Product Vision (v5 in progress)
+# Grill Planner — Product Vision (v5 shipped)
 
 Version 1 taught us something the original spec didn't anticipate: a BBQ has
 two fundamentally different kinds of "stuff" — things the group needs to buy
@@ -206,7 +206,7 @@ round.
 
 ---
 
-## v3 (planned): AI Event Summary
+## AI Event Summary (shipped in v3)
 
 **Purpose.** This isn't a dashboard feature — it's a specific bet on a group
 dynamic. In group chats, obvious open points ("nobody's bringing a grill")
