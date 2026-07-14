@@ -70,6 +70,11 @@ Assume that more than 90% of users will access the application on their smartpho
 
 Desktop support is still required, but every feature should be designed for mobile first.
 
+**Known gap:** the bottom tab bar isn't desktop-tuned yet — on wide
+viewports it should be centered in the middle of the screen rather than
+just inheriting the mobile layout's positioning. Not yet done; noted here
+so it isn't lost.
+
 The UI should feel modern and clean.
 
 Inspired by:
@@ -219,6 +224,7 @@ Possible ideas:
 - AI generated shopping list
 - AI recipe suggestions
 - Cost splitting
+- Multi-language support (beyond German/English)
 - Polls
 - Push notifications
 - Calendar export

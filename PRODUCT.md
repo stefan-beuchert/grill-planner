@@ -274,6 +274,26 @@ closes the loop back to where the problem lives.
   groups may ignore any reminder regardless of source. Ship small, watch a
   real event, adjust before building further on top of this.
 
+**Planned refinements (not yet built):**
+
+- **More languages.** Generation already respects locale (the prompt
+  templates `{{LANGUAGE}}` from `LANGUAGE_NAMES` in
+  `lib/actions/ai-summary.ts`), so once a new locale is added anywhere in
+  the app (see "Multi-language support" under Future Ideas below), the
+  summary generates in it automatically — this isn't separate work.
+- **Financial awareness**, once Receipt Scanner Milestone 2 (splitting)
+  exists — the summary should be able to surface money-related open
+  points too (e.g. receipts scanned but not yet split, or someone still
+  owing money), the same way it currently surfaces ride/shopping gaps.
+- **Prompt fix: contributor ≠ obligated buyer.** The Shopping List
+  context fed to the model includes each item's contributor breakdown
+  (who pledged what quantity/cost). That must not be read by the model as
+  "this person is responsible for physically buying/bringing the item" —
+  per the Contribution Ledger, *any* participant can mark *any* Shopping
+  List item purchased regardless of who contributed to it. The prompt
+  needs tightening so open-points reasoning doesn't imply an obligation
+  that doesn't actually exist in the product.
+
 ---
 
 ## Receipt Scanner — Milestone 1 of Cost Splitting (shipped in v6)
@@ -354,6 +374,16 @@ milestone. Consistent with how the Contribution Ledger already treats
 - A voting system so the group can jointly decide on date and/or location,
   instead of the organizer just picking one. Nice-to-have, not important
   right now.
+- **Multi-language support beyond German/English** — the `Locale`/
+  `Dictionary` system (`lib/i18n/`) is already built to support more than
+  two, it's just that only `de`/`en` dictionaries exist today. Adding a
+  language means a new dictionary file plus a `LANGUAGE_NAMES` entry for
+  the AI Summary (see above) — no architectural change needed, just the
+  translation work itself.
+- **Cost splitting Milestone 2** — see "Receipt Scanner — Milestone 1"
+  above for the full plan already agreed: equal-split-by-default across
+  participants, with the ability to assign a specific line item to
+  specific participants or exclude someone.
 
 ## Open Questions
 
