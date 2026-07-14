@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Lock, Minus, Pencil, Plus, Square, SquareCheck, X } from "lucide-react";
+import { Check, Lock, Minus, Pencil, Plus, ShoppingCart, SquareCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
@@ -156,6 +156,12 @@ export function ContributionList({
         const canUnmarkThis = stored?.participantId === item.purchasedByParticipantId;
         const showPurchaseControl = canMarkPurchased && (locked || !!stored);
         const canTogglePurchased = locked ? canUnmarkThis || canManage : true;
+        // Single-contributor items can show the name inline on the title
+        // row instead of a separate badge row below — nothing to wrap.
+        // Pooled items (2+ contributors) keep the stacked row: cramming
+        // several names onto one line would truncate who's covering what,
+        // which is the whole point of the contributor breakdown.
+        const soleContributor = item.contributions.length === 1 ? item.contributions[0] : null;
 
         return (
           <li
@@ -168,7 +174,14 @@ export function ContributionList({
             )}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="min-w-0 truncate text-base">{item.name}</span>
+              <span className="min-w-0 truncate text-base">
+                {item.name}
+                {soleContributor && (
+                  <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+                    — {soleContributor.participantName}
+                  </span>
+                )}
+              </span>
               <div className="flex shrink-0 items-center gap-1.5">
                 <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-sm font-medium text-primary tabular-nums">
                   × {total}
@@ -194,7 +207,7 @@ export function ContributionList({
                           : t.shoppingList.markPurchasedAria(item.name)
                       }
                     >
-                      {locked ? <SquareCheck className="size-4" /> : <Square className="size-4" />}
+                      {locked ? <SquareCheck className="size-4" /> : <ShoppingCart className="size-4" />}
                     </Button>
                   ) : (
                     <span
@@ -234,27 +247,29 @@ export function ContributionList({
                 </span>
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {item.contributions.map((c) => (
-                <span
-                  key={c.participantId}
-                  className="bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
-                >
-                  {c.participantName} {c.quantity}
-                  {canManage && (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => removeContribution(item.id, c.participantId)}
-                      aria-label={t.admin.removeContribution}
-                      className="hover:text-destructive"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
+            {(!soleContributor || canManage) && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {item.contributions.map((c) => (
+                  <span
+                    key={c.participantId}
+                    className="bg-muted text-muted-foreground flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+                  >
+                    {c.participantName} {c.quantity}
+                    {canManage && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => removeContribution(item.id, c.participantId)}
+                        aria-label={t.admin.removeContribution}
+                        className="hover:text-destructive"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
             {editing && stored && (
               <div className="flex items-center justify-end gap-3">
                 <Button
