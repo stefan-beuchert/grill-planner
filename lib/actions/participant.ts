@@ -23,9 +23,15 @@ export async function joinParty(slug: string, name: string) {
     return { success: false as const, error: t.participants.partyGone };
   }
 
-  const participant = await prisma.participant.create({
-    data: { partyId: party.id, name: parsed.data.name },
-  });
+  let participant;
+  try {
+    participant = await prisma.participant.create({
+      data: { partyId: party.id, name: parsed.data.name },
+    });
+  } catch (err) {
+    console.error("joinParty failed", { slug }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
 
@@ -54,10 +60,15 @@ export async function updateParticipantName(
     return { success: false as const, error: t.participants.onlyOwnEntry };
   }
 
-  await prisma.participant.update({
-    where: { id: participantId },
-    data: { name: parsed.data.name },
-  });
+  try {
+    await prisma.participant.update({
+      where: { id: participantId },
+      data: { name: parsed.data.name },
+    });
+  } catch (err) {
+    console.error("updateParticipantName failed", { slug, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
 

@@ -41,15 +41,21 @@ export async function createParty(values: PartyFormValues) {
     return { success: false as const, error: t.createPartyForm.createFailed };
   }
 
-  const party = await prisma.party.create({
-    data: {
-      slug,
-      title,
-      startsAt,
-      location,
-      notes: notes || null,
-    },
-  });
+  let party;
+  try {
+    party = await prisma.party.create({
+      data: {
+        slug,
+        title,
+        startsAt,
+        location,
+        notes: notes || null,
+      },
+    });
+  } catch (err) {
+    console.error("createParty failed", { slug }, err);
+    return { success: false as const, error: t.createPartyForm.createFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return {
@@ -77,10 +83,15 @@ export async function setPartyNote(
     return { success: false as const, error: t.common.joinFirst };
   }
 
-  await prisma.party.update({
-    where: { id: participant.partyId },
-    data: { note: parsed.data.note || null },
-  });
+  try {
+    await prisma.party.update({
+      where: { id: participant.partyId },
+      data: { note: parsed.data.note || null },
+    });
+  } catch (err) {
+    console.error("setPartyNote failed", { slug, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
@@ -104,10 +115,15 @@ export async function setPartyNotes(
     return { success: false as const, error: t.common.joinFirst };
   }
 
-  await prisma.party.update({
-    where: { id: participant.partyId },
-    data: { notes: parsed.data.note || null },
-  });
+  try {
+    await prisma.party.update({
+      where: { id: participant.partyId },
+      data: { notes: parsed.data.note || null },
+    });
+  } catch (err) {
+    console.error("setPartyNotes failed", { slug, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
@@ -131,10 +147,15 @@ export async function setLocationNote(
     return { success: false as const, error: t.common.joinFirst };
   }
 
-  await prisma.party.update({
-    where: { id: participant.partyId },
-    data: { locationNote: parsed.data.note || null },
-  });
+  try {
+    await prisma.party.update({
+      where: { id: participant.partyId },
+      data: { locationNote: parsed.data.note || null },
+    });
+  } catch (err) {
+    console.error("setLocationNote failed", { slug, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
@@ -158,10 +179,15 @@ export async function setBringNote(
     return { success: false as const, error: t.common.joinFirst };
   }
 
-  await prisma.party.update({
-    where: { id: participant.partyId },
-    data: { bringNote: parsed.data.note || null },
-  });
+  try {
+    await prisma.party.update({
+      where: { id: participant.partyId },
+      data: { bringNote: parsed.data.note || null },
+    });
+  } catch (err) {
+    console.error("setBringNote failed", { slug, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };

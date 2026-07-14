@@ -26,14 +26,19 @@ export async function setRideStatus(
   }
 
   const { status } = parsed.data;
-  await prisma.participant.update({
-    where: { id: participantId },
-    data: {
-      isDriver: status === "driving",
-      needsRide: status === "needsRide",
-      seatsFree: status === "driving" ? (parsed.data.seatsFree ?? 1) : null,
-    },
-  });
+  try {
+    await prisma.participant.update({
+      where: { id: participantId },
+      data: {
+        isDriver: status === "driving",
+        needsRide: status === "needsRide",
+        seatsFree: status === "driving" ? (parsed.data.seatsFree ?? 1) : null,
+      },
+    });
+  } catch (err) {
+    console.error("setRideStatus failed", { slug, participantId }, err);
+    return { success: false as const, error: t.common.actionFailed };
+  }
 
   revalidatePath(`/party/${slug}`);
   return { success: true as const };
