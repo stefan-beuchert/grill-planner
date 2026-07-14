@@ -2,15 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, Check, Circle, CircleCheck, Lock, Minus, Pencil, Plus, X } from "lucide-react";
+import { Check, Lock, Minus, Pencil, Plus, Square, SquareCheck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useStoredParticipant } from "@/lib/hooks/use-stored-participant";
 import { useStoredOrganizer } from "@/lib/hooks/use-stored-organizer";
-import { moveItem as moveItemAction, setContribution, setItemPurchased } from "@/lib/actions/item";
-import { adminMoveItem, adminRemoveContribution, adminUnmarkPurchased } from "@/lib/actions/admin";
+import { setContribution, setItemPurchased } from "@/lib/actions/item";
+import { adminRemoveContribution, adminUnmarkPurchased } from "@/lib/actions/admin";
 import { useI18n } from "@/lib/i18n/locale-context";
-import type { ItemListType } from "@/lib/generated/prisma/enums";
 
 export type ContributionItem = {
   id: string;
@@ -28,7 +27,6 @@ export function ContributionList({
   joinPrompt,
   isAdmin = false,
   canMarkPurchased = false,
-  listType,
 }: {
   slug: string;
   items: ContributionItem[];
@@ -36,7 +34,6 @@ export function ContributionList({
   joinPrompt: string;
   isAdmin?: boolean;
   canMarkPurchased?: boolean;
-  listType: ItemListType;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -145,24 +142,8 @@ export function ContributionList({
     router.refresh();
   }
 
-  async function moveItem(itemId: string, asParticipant: boolean) {
-    setPendingId(itemId);
-    setRowError(null);
-    const target = listType === "SHARED_PURCHASE" ? "BRING_YOUR_OWN" : "SHARED_PURCHASE";
-    const result =
-      asParticipant && stored
-        ? await moveItemAction(slug, stored.participantId, stored.editToken, itemId, target)
-        : await adminMoveItem(slug, itemId, target, organizer?.organizerToken);
-    setPendingId(null);
-    if (!result.success) {
-      setRowError({ itemId, message: errorMessageFrom(result) });
-      return;
-    }
-    router.refresh();
-  }
-
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-1.5">
       {items.map((item) => {
         const mine = stored
           ? (item.contributions.find((c) => c.participantId === stored.participantId)?.quantity ??
@@ -175,14 +156,12 @@ export function ContributionList({
         const canUnmarkThis = stored?.participantId === item.purchasedByParticipantId;
         const showPurchaseControl = canMarkPurchased && (locked || !!stored);
         const canTogglePurchased = locked ? canUnmarkThis || canManage : true;
-        const canMoveAsParticipant = !!stored && mine > 0 && !locked;
-        const canMove = canManage || canMoveAsParticipant;
 
         return (
           <li
             key={item.id}
             className={cn(
-              "flex flex-col gap-1.5 rounded-xl border px-3 py-2.5 transition-colors",
+              "flex flex-col gap-1 rounded-xl border px-3 py-1.5 transition-colors",
               mine > 0 && !locked && "border-primary/30 bg-accent",
               editing && "border-primary bg-accent",
               locked && "border-success/30 bg-success/10",
@@ -215,14 +194,14 @@ export function ContributionList({
                           : t.shoppingList.markPurchasedAria(item.name)
                       }
                     >
-                      {locked ? <CircleCheck className="size-4" /> : <Circle className="size-4" />}
+                      {locked ? <SquareCheck className="size-4" /> : <Square className="size-4" />}
                     </Button>
                   ) : (
                     <span
                       className="text-success flex h-11 w-11 items-center justify-center"
                       aria-label={t.shoppingList.purchasedAria(item.name)}
                     >
-                      <CircleCheck className="size-4" />
+                      <SquareCheck className="size-4" />
                     </span>
                   ))}
                 {!locked && stored && (
@@ -240,19 +219,6 @@ export function ContributionList({
                     }
                   >
                     {editing ? <X className="size-4" /> : <Pencil className="size-4" />}
-                  </Button>
-                )}
-                {canMove && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled={busy}
-                    onClick={() => moveItem(item.id, canMoveAsParticipant)}
-                    className="h-11 w-11"
-                    aria-label={t.common.moveToOtherListAria(item.name)}
-                  >
-                    <ArrowLeftRight className="size-4" />
                   </Button>
                 )}
               </div>

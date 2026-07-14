@@ -61,7 +61,6 @@ export function ShoppingListSection({
               joinPrompt={t.sharedPurchases.joinPrompt}
               isAdmin={isAdmin}
               canMarkPurchased
-              listType={ItemListType.SHARED_PURCHASE}
             />
             {stored && (
               <AddItemForm

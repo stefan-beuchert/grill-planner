@@ -10,7 +10,7 @@ vi.mock("next/cache", () => ({
   revalidatePath: () => {},
 }));
 
-const { setContribution, setItemPurchased, moveItem } = await import("@/lib/actions/item");
+const { setContribution, setItemPurchased } = await import("@/lib/actions/item");
 const { prisma } = await import("@/lib/prisma");
 const { createTestParty, createTestParticipant, deleteTestParty } = await import(
   "@/tests/fixtures"
@@ -141,85 +141,5 @@ describe("setItemPurchased — the purchase lock", () => {
       false,
     );
     expect(aliceResult.success).toBe(true);
-  });
-});
-
-describe("moveItem — moving between the two lists", () => {
-  let partyId: string;
-
-  afterEach(async () => {
-    if (partyId) await deleteTestParty(partyId);
-  });
-
-  it("lets a contributor move their own item to the other list", async () => {
-    const party = await createTestParty();
-    partyId = party.id;
-    const alice = await createTestParticipant(party.id, "Alice");
-    const item = await prisma.item.create({
-      data: {
-        partyId: party.id,
-        name: "Board Game",
-        listType: "BRING_YOUR_OWN",
-        contributions: { create: { participantId: alice.id, quantity: 1 } },
-      },
-    });
-
-    const result = await moveItem(
-      party.slug,
-      alice.id,
-      alice.editToken,
-      item.id,
-      "SHARED_PURCHASE",
-    );
-
-    expect(result.success).toBe(true);
-    const updated = await prisma.item.findUnique({ where: { id: item.id } });
-    expect(updated?.listType).toBe("SHARED_PURCHASE");
-  });
-
-  it("rejects moving an item the caller never contributed to", async () => {
-    const party = await createTestParty();
-    partyId = party.id;
-    const alice = await createTestParticipant(party.id, "Alice");
-    const bob = await createTestParticipant(party.id, "Bob");
-    const item = await prisma.item.create({
-      data: {
-        partyId: party.id,
-        name: "Board Game",
-        listType: "BRING_YOUR_OWN",
-        contributions: { create: { participantId: alice.id, quantity: 1 } },
-      },
-    });
-
-    const result = await moveItem(party.slug, bob.id, bob.editToken, item.id, "SHARED_PURCHASE");
-
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects moving a locked (purchased) item", async () => {
-    const party = await createTestParty();
-    partyId = party.id;
-    const alice = await createTestParticipant(party.id, "Alice");
-    const item = await prisma.item.create({
-      data: {
-        partyId: party.id,
-        name: "Chips",
-        listType: "SHARED_PURCHASE",
-        category: "FOOD",
-        purchased: true,
-        purchasedByParticipantId: alice.id,
-        contributions: { create: { participantId: alice.id, quantity: 1 } },
-      },
-    });
-
-    const result = await moveItem(
-      party.slug,
-      alice.id,
-      alice.editToken,
-      item.id,
-      "BRING_YOUR_OWN",
-    );
-
-    expect(result.success).toBe(false);
   });
 });

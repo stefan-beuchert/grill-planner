@@ -18,7 +18,6 @@ export const de = {
     editQuantityAria: (name: string) => `Menge für ${name} bearbeiten`,
     cancelQuantityAria: (name: string) => `Bearbeiten der Menge für ${name} abbrechen`,
     saveQuantityAria: (name: string) => `Menge für ${name} speichern`,
-    moveToOtherListAria: (name: string) => `„${name}" auf die andere Liste verschieben`,
   },
   localeToggle: {
     label: "Sprache",

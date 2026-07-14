@@ -159,7 +159,7 @@ stored client-side only, in `localStorage` (see
 `lib/participant-storage.ts`), keyed by party slug — never in a cookie, so
 it's naturally scoped per-browser and never sent to any other party's pages.
 Every Server Action that mutates a participant's own data
-(`setContribution`, `setItemPurchased`, renaming, ride info, `moveItem`)
+(`setContribution`, `setItemPurchased`, renaming, ride info)
 takes `(participantId, editToken)` as arguments and calls
 `authorizeParticipant` to confirm they match before writing anything. There
 is no session — every call re-proves ownership.
@@ -185,7 +185,7 @@ expected HMAC and compares with `timingSafeEqual`.
 
 **How the per-party admin actions in `lib/actions/admin.ts` combine these:**
 `adminUpdateParty`, `adminCancelParty`, `adminUnmarkPurchased`,
-`adminRemoveContribution`, `adminRemoveGuest`, and `adminMoveItem` all take
+`adminRemoveContribution`, and `adminRemoveGuest` all take
 an optional `organizerToken` and check `canManageParty(slug, organizerToken)`
 (`lib/organizer-auth.ts`) — true if the caller is either the global admin
 *or* holds that specific party's organizer token. Cross-party actions
@@ -197,12 +197,6 @@ of "manage everything." UI components that render these controls
 `canManage = isAdmin || !!organizer` to decide what to show — the
 `isAdmin` prop is still server-computed and passed down as before, but the
 organizer half is only ever known in the browser holding that token.
-
-A few participant-vs-admin-or-organizer actions accept either identity and
-prefer the participant path when available — e.g. `moveItem` in
-`contribution-list.tsx` uses the participant-authorized path when the
-viewer contributed to that item, falling back to the admin/organizer path
-otherwise.
 
 ---
 
