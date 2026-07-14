@@ -28,9 +28,13 @@ services:
       - next_cache:/app/.next
       - prisma_generated:/app/lib/generated
       # Playwright's browser binaries (~300MB) live here instead of in the
-      # image, so the main dev image stays lean — one-time setup via
-      # `docker compose exec app npx playwright install --with-deps chromium`,
-      # persists across rebuilds/restarts same as node_modules above.
+      # image, so the main dev image stays lean. The OS-level shared
+      # libraries Chromium needs (glib, nss, X11, pango, cairo, xvfb,
+      # fonts, ...) are baked into the image itself via the Dockerfile's
+      # `playwright install-deps` step, so the one-time setup here is just
+      # the binary download: `docker compose exec app npx playwright
+      # install chromium`. Persists across rebuilds/restarts same as
+      # node_modules above.
       - playwright_cache:/root/.cache/ms-playwright
     depends_on:
       db:
