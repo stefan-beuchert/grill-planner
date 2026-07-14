@@ -16,6 +16,7 @@ import { GeneralNote } from "@/components/party/general-note";
 import { LocationNote } from "@/components/party/location-note";
 import { AdminPartyControls } from "@/components/admin/admin-party-controls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { isAdmin } from "@/lib/admin-auth";
@@ -194,20 +195,23 @@ export default async function PartyPage({
             <ReceiptSection slug={party.slug} receipts={receipts} />
           </TabsContent>
 
-          <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom)]">
+          <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-muted-foreground/30 bg-background pb-[env(safe-area-inset-bottom)]">
             <TabsList className="mx-auto !h-auto w-full max-w-md justify-between gap-0 rounded-none bg-transparent p-0">
-              {tabs.map(({ value, label, icon: Icon }) => (
+              {tabs.map(({ value, label, icon: Icon }, index) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-auto flex-1 flex-col gap-1 rounded-none border-0 py-3 text-[11px] font-medium text-muted-foreground after:hidden data-active:bg-transparent data-active:text-primary"
+                  className={cn(
+                    "h-auto flex-1 flex-col gap-1 rounded-none border-y-0 border-r-0 py-2.5 text-[11px] font-medium text-muted-foreground after:hidden data-active:bg-transparent data-active:text-primary",
+                    index > 0 && "border-l border-muted-foreground/20",
+                  )}
                 >
                   {value === "guests" ? (
                     <span className="bg-primary flex size-8 items-center justify-center rounded-full">
                       <Icon className="size-5 text-primary-foreground" aria-hidden="true" />
                     </span>
                   ) : (
-                    <Icon className="size-6" aria-hidden="true" />
+                    <Icon className="size-5" aria-hidden="true" />
                   )}
                   {label}
                 </TabsTrigger>

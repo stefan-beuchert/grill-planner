@@ -65,7 +65,7 @@ export const de = {
     loadingLocation: "Wetter und Karte werden geladen ...",
     tabs: {
       bringing: "Mitbringen",
-      guests: "Gäste",
+      guests: "Übersicht",
       location: "Ort",
       shopping: "Einkaufen",
       receipts: "Rechnung",

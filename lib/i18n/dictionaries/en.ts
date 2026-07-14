@@ -67,7 +67,7 @@ export const en: Dictionary = {
     loadingLocation: "Loading weather and map...",
     tabs: {
       bringing: "Bringing",
-      guests: "Guests",
+      guests: "Overview",
       location: "Location",
       shopping: "Shopping",
       receipts: "Receipt",
