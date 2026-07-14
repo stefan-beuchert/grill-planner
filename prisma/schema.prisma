@@ -63,6 +63,7 @@ model Party {
 
   participants Participant[]
   items        Item[]
+  receipts     Receipt[]
 
   @@map("parties")
 }
@@ -85,8 +86,9 @@ model Participant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contributions  Contribution[]
-  purchasedItems Item[]         @relation("PurchasedItems")
+  contributions   Contribution[]
+  purchasedItems  Item[]         @relation("PurchasedItems")
+  scannedReceipts Receipt[]
 
   @@index([partyId])
   @@map("participants")
@@ -136,4 +138,50 @@ model Contribution {
   @@unique([itemId, participantId])
   @@index([participantId])
   @@map("contributions")
+}
+
+/// A single scanned grocery receipt, tied to the party it was bought for
+/// (Milestone 1 of Cost Splitting — see PRODUCT.md). Only the AI-extracted
+/// structured data (store name, line items) is persisted; the photo itself
+/// is used in-memory for the extraction request and never stored. A party
+/// can have any number of receipts — one per shopping trip is typical.
+model Receipt {
+  id                     String       @id @default(cuid())
+  partyId                String
+  party                  Party        @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  /// Whoever scanned the receipt, for context only — not an ownership or
+  /// permission boundary; any participant can edit any receipt's line
+  /// items, matching this app's open-collaboration model. SetNull (not
+  /// Cascade) so the receipt survives that participant later leaving.
+  scannedByParticipantId String?
+  scannedBy              Participant? @relation(fields: [scannedByParticipantId], references: [id], onDelete: SetNull)
+  /// AI-extracted store name, e.g. "REWE" — nullable since extraction may
+  /// not find one (faded print, cropped photo).
+  store                  String?
+  createdAt              DateTime     @default(now())
+
+  lineItems ReceiptLineItem[]
+
+  @@index([partyId])
+  @@map("receipts")
+}
+
+/// One line item on a Receipt — either AI-extracted from the photo or
+/// added/edited by hand afterward, since extraction is expected to be
+/// imperfect (glare, faded thermal print, discount lines). `priceCents` is
+/// an integer (not Float) to avoid floating-point rounding errors, matching
+/// this schema's existing Int quantity fields.
+model ReceiptLineItem {
+  id         String  @id @default(cuid())
+  receiptId  String
+  receipt    Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  name       String
+  priceCents Int
+  quantity   Int     @default(1)
+  /// Preserves receipt order (or manual-add order) since line items have no
+  /// other natural ordering.
+  position   Int
+
+  @@index([receiptId])
+  @@map("receipt_line_items")
 }

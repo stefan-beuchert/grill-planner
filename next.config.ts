@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
   // tab bar (mobile-first, tabs pinned to the bottom) — it physically
   // blocks the leftmost tab while developing. Dev-only, no effect on prod.
   devIndicators: false,
+  // Receipt Scanner (lib/actions/receipt.ts) sends a resized/re-encoded
+  // photo as base64 in a Server Action call — the default 1mb body limit is
+  // too small for that, even after the client-side downscale to ~1600px.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4mb",
+    },
+  },
 };
 
 export default nextConfig;

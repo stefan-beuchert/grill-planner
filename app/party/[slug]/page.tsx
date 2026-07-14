@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { HandPlatter, MapPin, ShoppingCart, Users } from "lucide-react";
+import { HandPlatter, MapPin, Receipt, ShoppingCart, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { CopyLinkButton } from "@/components/party/copy-link-button";
 import { ParticipantsSection } from "@/components/party/participants-section";
@@ -8,6 +8,7 @@ import { ThingsToBringSection } from "@/components/party/things-to-bring-section
 import { RideSection } from "@/components/party/ride-section";
 import { ShoppingListSection } from "@/components/party/shopping-list-section";
 import { LocationSection } from "@/components/party/location-section";
+import { ReceiptSection } from "@/components/party/receipt-section";
 import { PartyHeader } from "@/components/party/party-header";
 import { PartyShell } from "@/components/party/party-shell";
 import { AiSummary } from "@/components/party/ai-summary";
@@ -63,6 +64,18 @@ export default async function PartyPage({
         },
         orderBy: { createdAt: "asc" },
       },
+      receipts: {
+        select: {
+          id: true,
+          store: true,
+          scannedBy: { select: { name: true } },
+          lineItems: {
+            select: { id: true, name: true, priceCents: true, quantity: true },
+            orderBy: { position: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -90,10 +103,18 @@ export default async function PartyPage({
     .map((i) => ({ ...i, category: i.category! }));
   const bringItems = items.filter((i) => i.listType === "BRING_YOUR_OWN");
 
+  const receipts = party.receipts.map((receipt) => ({
+    id: receipt.id,
+    store: receipt.store,
+    scannedByName: receipt.scannedBy?.name ?? null,
+    lineItems: receipt.lineItems,
+  }));
+
   const tabs = [
     { value: "guests", label: t.partyPage.tabs.guests, icon: Users },
     { value: "bringing", label: t.partyPage.tabs.bringing, icon: HandPlatter },
     { value: "shopping", label: t.partyPage.tabs.shopping, icon: ShoppingCart },
+    { value: "receipts", label: t.partyPage.tabs.receipts, icon: Receipt },
     { value: "location", label: t.partyPage.tabs.location, icon: MapPin },
   ] as const;
 
@@ -167,6 +188,10 @@ export default async function PartyPage({
               note={party.note}
               isAdmin={admin}
             />
+          </TabsContent>
+
+          <TabsContent value="receipts" className="animate-in fade-in duration-200">
+            <ReceiptSection slug={party.slug} receipts={receipts} />
           </TabsContent>
 
           <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom)]">

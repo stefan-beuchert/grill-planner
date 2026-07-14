@@ -81,6 +81,7 @@ A single grill party. `slug` is the unguessable public id used in the shareable 
 | `updatedAt` | `DateTime` | @updatedAt |
 | `participants` | `Participant[]` | — |
 | `items` | `Item[]` | — |
+| `receipts` | `Receipt[]` | — |
 
 **Constraints:** `@@map("parties")`
 
@@ -102,6 +103,7 @@ Someone who joined a party through the shared link. `editToken` is a second, non
 | `updatedAt` | `DateTime` | @updatedAt |
 | `contributions` | `Contribution[]` | — |
 | `purchasedItems` | `Item[]` | @relation("PurchasedItems") |
+| `scannedReceipts` | `Receipt[]` | — |
 
 **Constraints:** `@@index([partyId])`, `@@map("participants")`
 
@@ -140,6 +142,39 @@ One participant's pledged quantity toward an Item. An item's displayed total is 
 
 **Constraints:** `@@unique([itemId, participantId])`, `@@index([participantId])`, `@@map("contributions")`
 
+### Receipt
+
+A single scanned grocery receipt, tied to the party it was bought for (Milestone 1 of Cost Splitting — see PRODUCT.md). Only the AI-extracted structured data (store name, line items) is persisted; the photo itself is used in-memory for the extraction request and never stored. A party can have any number of receipts — one per shopping trip is typical.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `String` | @id @default(cuid()) |
+| `partyId` | `String` | — |
+| `party` | `Party` | @relation(fields: [partyId], references: [id], onDelete: Cascade) |
+| `scannedByParticipantId` | `String?` | Whoever scanned the receipt, for context only — not an ownership or permission boundary; any participant can edit any receipt's line items, matching this app's open-collaboration model. SetNull (not Cascade) so the receipt survives that participant later leaving. |
+| `scannedBy` | `Participant?` | @relation(fields: [scannedByParticipantId], references: [id], onDelete: SetNull) |
+| `store` | `String?` | AI-extracted store name, e.g. "REWE" — nullable since extraction may not find one (faded print, cropped photo). |
+| `createdAt` | `DateTime` | @default(now()) |
+| `lineItems` | `ReceiptLineItem[]` | — |
+
+**Constraints:** `@@index([partyId])`, `@@map("receipts")`
+
+### ReceiptLineItem
+
+One line item on a Receipt — either AI-extracted from the photo or added/edited by hand afterward, since extraction is expected to be imperfect (glare, faded thermal print, discount lines). `priceCents` is an integer (not Float) to avoid floating-point rounding errors, matching this schema's existing Int quantity fields.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `String` | @id @default(cuid()) |
+| `receiptId` | `String` | — |
+| `receipt` | `Receipt` | @relation(fields: [receiptId], references: [id], onDelete: Cascade) |
+| `name` | `String` | — |
+| `priceCents` | `Int` | — |
+| `quantity` | `Int` | @default(1) |
+| `position` | `Int` | Preserves receipt order (or manual-add order) since line items have no other natural ordering. |
+
+**Constraints:** `@@index([receiptId])`, `@@map("receipt_line_items")`
+
 ### Enums
 - **ItemListType**: `SHARED_PURCHASE`, `BRING_YOUR_OWN`
 - **ItemCategory**: `FOOD`, `DRINK`, `OTHER`
@@ -162,7 +197,12 @@ Every Server Action that mutates a participant's own data
 (`setContribution`, `setItemPurchased`, renaming, ride info)
 takes `(participantId, editToken)` as arguments and calls
 `authorizeParticipant` to confirm they match before writing anything. There
-is no session — every call re-proves ownership.
+is no session — every call re-proves ownership. The Receipt Scanner actions
+(`lib/actions/receipt.ts` — `scanReceipt`, `addReceiptLineItem`,
+`updateReceiptLineItem`, `deleteReceiptLineItem`, `deleteReceipt`) follow
+this exact same pattern; there's no separate receipt-ownership concept — any
+joined participant can edit or delete any receipt on their party, matching
+the open-collaboration model used everywhere else.
 
 **Organizer identity** (`lib/organizer-auth.ts`): the same pattern, one
 level up — each `Party` gets its own random `organizerToken` (cuid) at
@@ -210,6 +250,7 @@ the server (Server Actions / Server Components), never the browser.
 | **Nominatim** (`lib/geocode.ts`) | Address → lat/lon | OpenStreetMap's free geocoder, no API key. Requires a descriptive `User-Agent`. Result cached via Next's `fetch` `revalidate: 3600`. |
 | **Open-Meteo** (`lib/weather.ts`) | Weather forecast for the party date | Free, no API key. Only covers ~16 days out — returns `null` (not a guess) outside that window. |
 | **Anthropic API** (`lib/anthropic.ts`, `lib/actions/ai-summary.ts`) | AI Event Summary (recap + open coordination gaps) | Requires `ANTHROPIC_API_KEY`. Result is cached in the `Party` row (`aiSummaryRecap`/`aiSummaryOpenPoints`/`aiSummaryGeneratedAt`) and only regenerated on explicit user request, not automatically. |
+| **Anthropic API** (`lib/anthropic.ts`, `lib/actions/receipt.ts`) | Receipt Scanner — extracts store name + line items from a photographed receipt (Milestone 1 of Cost Splitting, see PRODUCT.md) | Same client/model as above (`claude-haiku-4-5`), called with an image content block instead of text. The photo itself is only ever in-memory for this one request — never written to disk or object storage; only the extracted `Receipt`/`ReceiptLineItem` rows are persisted. |
 | **Postgres** (via `@prisma/adapter-pg`) | Primary datastore | Local dev: Docker Compose `db` service. Production: Supabase. |
 
 ---

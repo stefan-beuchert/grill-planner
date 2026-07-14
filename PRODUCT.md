@@ -1,4 +1,4 @@
-# Grill Planner — Product Vision (v5 shipped)
+# Grill Planner — Product Vision (v6 shipped)
 
 Version 1 taught us something the original spec didn't anticipate: a BBQ has
 two fundamentally different kinds of "stuff" — things the group needs to buy
@@ -22,15 +22,19 @@ explicit and rebuilds Purchases/Drinks/Food around it.
 
 ## Navigation
 
-Four tabs (v4: down from five — Shared Purchases and Shopping List, which
-had become two near-identical views of the same items, are now one tab):
+Five tabs (v4 had merged Shared Purchases and Shopping List — two
+near-identical views of the same items — down to one, landing at four;
+v6 adds **Receipt** back to five, as a genuinely new post-party phase
+rather than a reason to reconsider that merge):
 
 1. **Guests** — participant list
 2. **Shopping List** — Food / Drinks / Other (collapsible sections), each
    item showing its contributor breakdown *and* purchased/locked state in
    one place
 3. **Things People Bring**
-4. **Location** — weather + map + car sharing / driver coordination
+4. **Receipt** — scan and review post-party receipts (see "Receipt
+   Scanner" below)
+5. **Location** — weather + map + car sharing / driver coordination
 
 A persistent **party identity bar** stays visible above all five tabs:
 party title + date. It exists purely to stop the app from feeling generic
@@ -269,6 +273,79 @@ closes the loop back to where the problem lives.
   actually gets addressed where a human-phrased one wouldn't have. Some
   groups may ignore any reminder regardless of source. Ship small, watch a
   real event, adjust before building further on top of this.
+
+---
+
+## Receipt Scanner — Milestone 1 of Cost Splitting (shipped in v6)
+
+**Purpose.** CLAUDE.md's Future Features backlog lists "Cost splitting" —
+this is the deliberate first milestone toward it, scoped narrowly on
+purpose: capture a photo of a receipt, extract it into an editable
+itemized list, and let anyone correct it by hand. **No splitting logic
+exists yet** — no per-participant assignment, no equal-split math, no
+"who owes what." That's Milestone 2, described below, not forgotten scope.
+
+**Where:** a new **Rechnung** (Receipt) tab — the fourth tab, before
+Location. Justified as a genuinely new tab (rather than folded into an
+existing one, per this doc's own principle against tab sprawl) because
+it's a different *phase* of the party from every existing tab: everything
+else is before/during planning, this is strictly after — nobody has a
+receipt to scan until the shopping trip already happened.
+
+**Capture:** a plain `<input type="file" capture="environment">` — no
+camera library. On mobile this opens the device camera directly; on
+desktop it falls back to a normal file picker. The photo is resized and
+re-encoded to JPEG client-side (canvas, ~1600px max width, ~0.7 quality)
+before it's sent anywhere, both to keep the upload small on a mobile
+connection and because there's no reason to send a multi-megapixel
+original for something only read once by a model.
+
+**Extraction:** same pattern as the AI Event Summary — a Server Action
+(`scanReceipt`) calls `claude-haiku-4-5` server-side, this time with an
+image content block instead of text, asking for a store name and a list
+of line items (name, price, quantity). **The photo itself is never
+persisted** — no object storage, no retention question to answer, because
+there's nothing kept past the single extraction request. Only the
+AI-extracted structured data is written to Postgres (`Receipt` +
+`ReceiptLineItem`).
+
+**Extraction is expected to be imperfect** — glare, faded thermal-printer
+ink, an angled photo, a receipt with per-item discounts the model
+misattributes. The result is presented as an **editable draft, not a final
+answer**: every field of every line item (name, price, quantity) can be
+edited inline, individual items can be deleted, and items can be added by
+hand — covering both "the AI got this one wrong" and "the AI missed this
+one entirely."
+
+**Money as integer cents**, not a float, matching this schema's existing
+`Int` quantity fields — avoids floating-point rounding errors when totals
+get summed and (eventually) split.
+
+**Multiple receipts per party**, not a single-receipt constraint — a
+shopping trip commonly spans more than one store, and nothing stops
+several participants from each buying separate parts of the list.
+
+**Permissions:** open to any joined participant, same as every other
+open-collaboration action in this app (add/edit/delete any line item,
+delete any receipt) — no per-receipt ownership or lock concept for this
+milestone. Consistent with how the Contribution Ledger already treats
+"anyone can correct anything" as the default, not the exception.
+
+**Known trade-offs, documented not solved:**
+
+- No bill-splitting math yet — this milestone is capture + review only.
+  **Milestone 2** (the deliberate next step, not deferred indefinitely) is:
+  equal-split-by-default across participants, with the ability to assign a
+  specific line item to specific participants, or exclude someone from a
+  line item entirely (e.g. one person's individual snack shouldn't be
+  split across everyone who came).
+- The receipt photo is sent to a third-party LLM API for extraction, same
+  low-stakes/conscious-choice trade-off already documented for the AI
+  Event Summary above.
+- No permission/lock model on receipts yet, mirroring the Contribution
+  Ledger's existing trust model — acceptable for a small trusted-friends
+  group, would need revisiting if a receipt's dollar amounts become a
+  higher-stakes target for accidental or malicious edits.
 
 ---
 
