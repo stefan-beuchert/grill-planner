@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
     "docs:generate": "node scripts/generate-schema-docs.js",
     "test": "vitest run",
     "test:e2e": "playwright test"
@@ -45,6 +46,7 @@
     "eslint-config-next": "16.2.10",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4",
     "typescript": "^5",
     "vitest": "^3.0.0"
   }
