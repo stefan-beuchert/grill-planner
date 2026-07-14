@@ -111,11 +111,11 @@ export default async function PartyPage({
   }));
 
   const tabs = [
-    { value: "guests", label: t.partyPage.tabs.guests, icon: Users },
+    { value: "location", label: t.partyPage.tabs.location, icon: MapPin },
     { value: "bringing", label: t.partyPage.tabs.bringing, icon: HandPlatter },
+    { value: "guests", label: t.partyPage.tabs.guests, icon: Users },
     { value: "shopping", label: t.partyPage.tabs.shopping, icon: ShoppingCart },
     { value: "receipts", label: t.partyPage.tabs.receipts, icon: Receipt },
-    { value: "location", label: t.partyPage.tabs.location, icon: MapPin },
   ] as const;
 
   return (
@@ -195,14 +195,20 @@ export default async function PartyPage({
           </TabsContent>
 
           <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background pb-[env(safe-area-inset-bottom)]">
-            <TabsList className="mx-auto h-auto w-full max-w-md justify-between gap-0 rounded-none bg-transparent p-0">
+            <TabsList className="mx-auto !h-auto w-full max-w-md justify-between gap-0 rounded-none bg-transparent p-0">
               {tabs.map(({ value, label, icon: Icon }) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-auto flex-1 flex-col gap-1 rounded-none border-0 py-2.5 text-[11px] font-medium text-muted-foreground after:hidden data-active:bg-transparent data-active:text-primary"
+                  className="h-auto flex-1 flex-col gap-1 rounded-none border-0 py-3 text-[11px] font-medium text-muted-foreground after:hidden data-active:bg-transparent data-active:text-primary"
                 >
-                  <Icon className="size-5" aria-hidden="true" />
+                  {value === "guests" ? (
+                    <span className="bg-primary flex size-8 items-center justify-center rounded-full">
+                      <Icon className="size-5 text-primary-foreground" aria-hidden="true" />
+                    </span>
+                  ) : (
+                    <Icon className="size-6" aria-hidden="true" />
+                  )}
                   {label}
                 </TabsTrigger>
               ))}
