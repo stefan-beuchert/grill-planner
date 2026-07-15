@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Mirrors docker-compose.yml's `db` service — the app's dev/test
+    # Postgres, not the pooled Supabase connection production uses.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: grillplanner_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Unit tests only ever touch this database (see vitest.config.ts /
+      # tests/global-setup.ts) — there's no separate dev database to seed
+      # in CI, nothing here runs the app itself.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/grillplanner_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # postinstall runs `prisma generate` automatically.
+      - run: npm ci
+
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test

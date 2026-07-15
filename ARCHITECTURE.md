@@ -351,3 +351,11 @@ Playwright's browser binary lives in its own named volume
 (`playwright_cache`), not the image, so it needs a one-time
 `npx playwright install --with-deps chromium` per environment (see
 README.md) rather than bloating every image build.
+
+**CI** (`.github/workflows/ci.yml`) runs lint, typecheck (`npm run
+typecheck`, a plain `tsc --noEmit`), and the unit test suite against an
+ephemeral `postgres:16-alpine` service container on every push to `main`
+and every pull request — mirroring `docker-compose.yml`'s `db` service,
+not a mock. The Playwright e2e test isn't in CI yet (it needs a running
+dev server plus a browser install, both heavier than this first pass);
+running it remains a manual, local step.

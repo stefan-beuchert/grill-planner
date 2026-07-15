@@ -62,3 +62,11 @@ Playwright's browser binary lives in its own named volume, not the image
 ```bash
 docker compose exec app npx playwright install --with-deps chromium
 ```
+
+## CI
+
+`.github/workflows/ci.yml` runs lint, typecheck, and the unit test suite
+(against an ephemeral Postgres service container) on every push to `main`
+and every pull request. The Playwright e2e test isn't wired into CI yet —
+it needs a running dev server and a browser install, both heavier than
+this first pass covers.
