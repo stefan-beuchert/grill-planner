@@ -23,6 +23,7 @@ export const de = {
     label: "Sprache",
     german: "DE",
     english: "EN",
+    spanish: "ES",
   },
   themeToggle: {
     switchToLight: "Helles Design",

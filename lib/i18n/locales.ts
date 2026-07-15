@@ -1,4 +1,4 @@
-export const LOCALES = ["de", "en"] as const;
+export const LOCALES = ["de", "en", "es"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 // German first: the app's primary/default audience.

@@ -25,6 +25,7 @@ export const en: Dictionary = {
     label: "Language",
     german: "DE",
     english: "EN",
+    spanish: "ES",
   },
   themeToggle: {
     switchToLight: "Switch to light theme",

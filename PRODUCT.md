@@ -276,11 +276,6 @@ closes the loop back to where the problem lives.
 
 **Planned refinements (not yet built):**
 
-- **More languages.** Generation already respects locale (the prompt
-  templates `{{LANGUAGE}}` from `LANGUAGE_NAMES` in
-  `lib/actions/ai-summary.ts`), so once a new locale is added anywhere in
-  the app (see "Multi-language support" under Future Ideas below), the
-  summary generates in it automatically — this isn't separate work.
 - **Financial awareness**, once Receipt Scanner Milestone 2 (splitting)
   exists — the summary should be able to surface money-related open
   points too (e.g. receipts scanned but not yet split, or someone still
@@ -366,12 +361,13 @@ milestone. Consistent with how the Contribution Ledger already treats
 - A voting system so the group can jointly decide on date and/or location,
   instead of the organizer just picking one. Nice-to-have, not important
   right now.
-- **Multi-language support beyond German/English** — the `Locale`/
-  `Dictionary` system (`lib/i18n/`) is already built to support more than
-  two, it's just that only `de`/`en` dictionaries exist today. Adding a
-  language means a new dictionary file plus a `LANGUAGE_NAMES` entry for
-  the AI Summary (see above) — no architectural change needed, just the
-  translation work itself.
+- **Further languages beyond German/English/Spanish** — `de`/`en`/`es`
+  ship today (`lib/i18n/dictionaries/`); adding another means a new
+  dictionary file, a `LOCALES` entry (`lib/i18n/locales.ts`), a
+  `LANGUAGE_NAMES` entry for the AI Summary, and adding the locale to the
+  `Intl` locale maps in `lib/party-datetime.ts` / `lib/format-cents.ts` and
+  the metadata map in `app/layout.tsx` — no other architectural change
+  needed.
 - **Cost splitting Milestone 2** — see "Receipt Scanner — Milestone 1"
   above for the full plan already agreed: equal-split-by-default across
   participants, with the ability to assign a specific line item to

@@ -4,8 +4,14 @@ import type { Locale } from "@/lib/i18n/locales";
 // to avoid floating-point rounding errors — this is the one place it's
 // converted back to a display string. Always EUR: this app has no
 // multi-currency concept yet.
+const INTL_LOCALES: Record<Locale, string> = {
+  de: "de-DE",
+  en: "en-US",
+  es: "es-MX",
+};
+
 export function formatCents(cents: number, locale: Locale): string {
-  return new Intl.NumberFormat(locale === "de" ? "de-DE" : "en-US", {
+  return new Intl.NumberFormat(INTL_LOCALES[locale], {
     style: "currency",
     currency: "EUR",
   }).format(cents / 100);

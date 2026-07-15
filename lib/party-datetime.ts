@@ -13,6 +13,7 @@ export function combineDateAndTimeUtc(date: string, time: string): Date {
 const INTL_LOCALES: Record<Locale, string> = {
   de: "de-DE",
   en: "en-US",
+  es: "es-MX",
 };
 
 export function formatPartyDateTime(startsAt: Date, locale: Locale): string {

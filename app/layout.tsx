@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getTheme } from "@/lib/get-theme";
 import { I18nProvider } from "@/lib/i18n/locale-context";
+import type { Locale } from "@/lib/i18n/locales";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -16,11 +17,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const METADATA_BY_LOCALE: Record<Locale, Metadata> = {
+  de: { title: "Grill Planner", description: "Plane ein Grillfest mit Freunden — kein Konto nötig." },
+  en: { title: "Grill Planner", description: "Plan a BBQ with friends — no account needed." },
+  es: { title: "Grill Planner", description: "Organiza una carne asada con tus cuates — sin registro." },
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
-  return locale === "de"
-    ? { title: "Grill Planner", description: "Plane ein Grillfest mit Freunden — kein Konto nötig." }
-    : { title: "Grill Planner", description: "Plan a BBQ with friends — no account needed." };
+  return METADATA_BY_LOCALE[locale];
 }
 
 export default async function RootLayout({

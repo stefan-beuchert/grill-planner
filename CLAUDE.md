@@ -219,7 +219,7 @@ Possible ideas:
 - AI generated shopping list
 - AI recipe suggestions
 - Cost splitting
-- Multi-language support (beyond German/English)
+- Further languages beyond German/English/Spanish
 - Polls
 - Push notifications
 - Calendar export
