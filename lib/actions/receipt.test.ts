@@ -57,6 +57,34 @@ describe("addReceiptLineItem", () => {
     expect(lineItems[1]).toMatchObject({ name: "Sausages", priceCents: 499, quantity: 2, position: 1 });
   });
 
+  it("creates a split row for every current participant on the new line item", async () => {
+    const party = await createTestParty();
+    partyId = party.id;
+    const alice = await createTestParticipant(party.id, "Alice");
+    const bob = await createTestParticipant(party.id, "Bob");
+    const receipt = await createTestReceipt(party.id, alice.id);
+
+    const result = await addReceiptLineItem(
+      party.slug,
+      alice.id,
+      alice.editToken,
+      receipt.id,
+      "Sausages",
+      499,
+      2,
+    );
+
+    expect(result.success).toBe(true);
+    const lineItem = await prisma.receiptLineItem.findFirstOrThrow({
+      where: { receiptId: receipt.id, name: "Sausages" },
+    });
+    const splits = await prisma.receiptLineItemSplit.findMany({
+      where: { lineItemId: lineItem.id },
+    });
+    expect(splits).toHaveLength(2);
+    expect(splits.map((s) => s.participantId).sort()).toEqual([alice.id, bob.id].sort());
+  });
+
   it("rejects an edit token that doesn't belong to the participant", async () => {
     const party = await createTestParty();
     partyId = party.id;

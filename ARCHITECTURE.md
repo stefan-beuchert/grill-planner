@@ -103,7 +103,9 @@ Someone who joined a party through the shared link. `editToken` is a second, non
 | `updatedAt` | `DateTime` | @updatedAt |
 | `contributions` | `Contribution[]` | — |
 | `purchasedItems` | `Item[]` | @relation("PurchasedItems") |
-| `scannedReceipts` | `Receipt[]` | — |
+| `scannedReceipts` | `Receipt[]` | @relation("ScannedReceipts") |
+| `paidReceipts` | `Receipt[]` | @relation("PaidReceipts") |
+| `receiptLineItemSplits` | `ReceiptLineItemSplit[]` | — |
 
 **Constraints:** `@@index([partyId])`, `@@map("participants")`
 
@@ -152,12 +154,14 @@ A single scanned grocery receipt, tied to the party it was bought for (Milestone
 | `partyId` | `String` | — |
 | `party` | `Party` | @relation(fields: [partyId], references: [id], onDelete: Cascade) |
 | `scannedByParticipantId` | `String?` | Whoever scanned the receipt, for context only — not an ownership or permission boundary; any participant can edit any receipt's line items, matching this app's open-collaboration model. SetNull (not Cascade) so the receipt survives that participant later leaving. |
-| `scannedBy` | `Participant?` | @relation(fields: [scannedByParticipantId], references: [id], onDelete: SetNull) |
+| `scannedBy` | `Participant?` | @relation("ScannedReceipts", fields: [scannedByParticipantId], references: [id], onDelete: SetNull) |
+| `paidByParticipantId` | `String?` | Whoever paid the store for this receipt, for settlement purposes (Milestone 2 of Cost Splitting). Nullable — a receipt can exist before anyone records who paid. SetNull, same reasoning as scannedByParticipantId: the receipt survives that participant leaving. |
+| `paidBy` | `Participant?` | @relation("PaidReceipts", fields: [paidByParticipantId], references: [id], onDelete: SetNull) |
 | `store` | `String?` | AI-extracted store name, e.g. "REWE" — nullable since extraction may not find one (faded print, cropped photo). |
 | `createdAt` | `DateTime` | @default(now()) |
 | `lineItems` | `ReceiptLineItem[]` | — |
 
-**Constraints:** `@@index([partyId])`, `@@map("receipts")`
+**Constraints:** `@@index([partyId])`, `@@index([paidByParticipantId])`, `@@map("receipts")`
 
 ### ReceiptLineItem
 
@@ -172,8 +176,23 @@ One line item on a Receipt — either AI-extracted from the photo or added/edite
 | `priceCents` | `Int` | — |
 | `quantity` | `Int` | @default(1) |
 | `position` | `Int` | Preserves receipt order (or manual-add order) since line items have no other natural ordering. |
+| `splits` | `ReceiptLineItemSplit[]` | — |
 
 **Constraints:** `@@index([receiptId])`, `@@map("receipt_line_items")`
+
+### ReceiptLineItemSplit
+
+Which participants share a given ReceiptLineItem's cost (Milestone 2 of Cost Splitting). Existence-based, exactly like Contribution: a row here means that participant is included in this line item's equal split; no row means excluded. One row per current party participant is created at line-item-creation time (both scanReceipt's bulk create and addReceiptLineItem), so "split equally across everyone" is the default with no separate flag needed — and, like Contribution, splits are NOT retroactively created for participants who join after a receipt/line item already exists.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `String` | @id @default(cuid()) |
+| `lineItemId` | `String` | — |
+| `lineItem` | `ReceiptLineItem` | @relation(fields: [lineItemId], references: [id], onDelete: Cascade) |
+| `participantId` | `String` | — |
+| `participant` | `Participant` | @relation(fields: [participantId], references: [id], onDelete: Cascade) |
+
+**Constraints:** `@@unique([lineItemId, participantId])`, `@@index([participantId])`, `@@map("receipt_line_item_splits")`
 
 ### Enums
 - **ItemListType**: `SHARED_PURCHASE`, `BRING_YOUR_OWN`
@@ -203,6 +222,19 @@ is no session — every call re-proves ownership. The Receipt Scanner actions
 this exact same pattern; there's no separate receipt-ownership concept — any
 joined participant can edit or delete any receipt on their party, matching
 the open-collaboration model used everywhere else.
+
+`lib/actions/receipt-split.ts`'s two Server Actions (`setLineItemSplitInclusion`,
+`setReceiptPayer` — Cost Splitting Milestone 2, see PRODUCT.md) authorize the
+*caller* the same way, via `authorizeParticipant(participantId, editToken)`.
+The twist is the *target*: `targetParticipantId` (who gets included/excluded
+from a line item's split) and `payerParticipantId` (who gets recorded as
+having paid a receipt) are deliberately **not** required to be the caller's
+own id — they're looked up independently and only checked for same-party
+membership (`targetParticipant.partyId === caller.partyId`), never compared
+against the caller. Any joined participant can toggle any other
+participant's split inclusion or set any participant as a receipt's payer,
+matching the receipt tab's existing fully-open collaboration model — this is
+intentionally different from `setContribution`'s "edit only your own row."
 
 **Organizer identity** (`lib/organizer-auth.ts`): the same pattern, one
 level up — each `Party` gets its own random `organizerToken` (cuid) at
@@ -249,7 +281,7 @@ the server (Server Actions / Server Components), never the browser.
 |---|---|---|
 | **Nominatim** (`lib/geocode.ts`) | Address → lat/lon | OpenStreetMap's free geocoder, no API key. Requires a descriptive `User-Agent`. Result cached via Next's `fetch` `revalidate: 3600`. |
 | **Open-Meteo** (`lib/weather.ts`) | Weather forecast for the party date | Free, no API key. Only covers ~16 days out — returns `null` (not a guess) outside that window. |
-| **Anthropic API** (`lib/anthropic.ts`, `lib/actions/ai-summary.ts`) | AI Event Summary (recap + open coordination gaps) | Requires `ANTHROPIC_API_KEY`. Result is cached in the `Party` row (`aiSummaryRecap`/`aiSummaryOpenPoints`/`aiSummaryGeneratedAt`) and only regenerated on explicit user request, not automatically. |
+| **Anthropic API** (`lib/anthropic.ts`, `lib/actions/ai-summary.ts`) | AI Event Summary (recap + open coordination gaps) | Requires `ANTHROPIC_API_KEY`. Result is cached in the `Party` row (`aiSummaryRecap`/`aiSummaryOpenPoints`/`aiSummaryGeneratedAt`) and only regenerated on explicit user request, not automatically. Also reads receipt/settlement data (via `lib/settlement.ts`) to surface financial open points — no schema change, computed fresh on each generation. |
 | **Anthropic API** (`lib/anthropic.ts`, `lib/actions/receipt.ts`) | Receipt Scanner — extracts store name + line items from a photographed receipt (Milestone 1 of Cost Splitting, see PRODUCT.md) | Same client/model as above (`claude-haiku-4-5`), called with an image content block instead of text. The photo itself is only ever in-memory for this one request — never written to disk or object storage; only the extracted `Receipt`/`ReceiptLineItem` rows are persisted. |
 | **Postgres** (via `@prisma/adapter-pg`) | Primary datastore | Local dev: Docker Compose `db` service. Production: Supabase. |
 

@@ -225,6 +225,11 @@ Possible ideas:
 - Calendar export
 - QR invite
 - Photo gallery
+- SpongeBob-themed party skin/variant — for an upcoming SpongeBob-themed
+  grill party. Idea only so far: custom color palette, imagery, and
+  copy/tone for that one event. Not scoped yet — no decision on whether
+  this is a one-off reskin, a per-party "theme" concept, or something
+  else entirely.
 
 ---
 
