@@ -54,9 +54,11 @@ async function createImageBitmapFromFile(file: File): Promise<HTMLImageElement> 
 export function ReceiptSection({
   slug,
   receipts,
+  participants,
 }: {
   slug: string;
   receipts: ReceiptData[];
+  participants: { id: string; name: string }[];
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -122,7 +124,7 @@ export function ReceiptSection({
       ) : (
         <div className="flex flex-col gap-3">
           {receipts.map((receipt) => (
-            <ReceiptCard key={receipt.id} slug={slug} receipt={receipt} />
+            <ReceiptCard key={receipt.id} slug={slug} receipt={receipt} participants={participants} />
           ))}
         </div>
       )}

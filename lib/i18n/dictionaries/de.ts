@@ -219,7 +219,7 @@ export const de = {
   },
   receipt: {
     heading: "Rechnung",
-    hint: "Scanne einen Kassenbon für eine bearbeitbare, aufgeschlüsselte Liste — die Kostenteilung selbst kommt erst als Nächstes.",
+    hint: "Scanne einen Kassenbon für eine bearbeitbare, aufgeschlüsselte Liste — wird automatisch auf alle aufgeteilt, tippe auf einen Namen, um ihn bei einem Artikel ein- oder auszuschließen.",
     joinPrompt: "Tritt der Party oben bei, um einen Beleg zu scannen oder zu bearbeiten.",
     scanButton: "Beleg scannen",
     scanning: "Beleg wird gelesen ...",
@@ -244,6 +244,20 @@ export const de = {
     deleteReceiptConfirm:
       "Diesen Beleg mit allen Artikeln löschen? Das kann nicht rückgängig gemacht werden.",
     invalidPrice: "Gib einen gültigen Preis ein.",
+    paidByLabel: "Bezahlt von",
+    selectPayerAria: (name: string) => `${name} als Zahler festlegen`,
+    clearPayerAria: (name: string) => `${name} als Zahler entfernen`,
+    splitWithLabel: "Aufteilen zwischen",
+    toggleSplitIncludeAria: (name: string, item: string) => `${name} bei ${item} einschließen`,
+    toggleSplitExcludeAria: (name: string, item: string) => `${name} bei ${item} ausschließen`,
+    mustIncludeSomeone: "Mindestens eine Person muss bei diesem Artikel eingeschlossen sein.",
+    participantGone: "Diese Person ist nicht mehr Teil dieser Party.",
+    settlementHeading: "Wer schuldet wem",
+    settlementAllSettled: "Alles ausgeglichen.",
+    settlementOwes: (fromName: string, toName: string, formattedAmount: string) =>
+      `${fromName} schuldet ${toName} ${formattedAmount}`,
+    balanceOwed: (name: string, formattedAmount: string) => `${name} bekommt noch ${formattedAmount}`,
+    balanceOwes: (name: string, formattedAmount: string) => `${name} schuldet noch ${formattedAmount}`,
   },
   error: {
     heading: "Etwas ist schiefgelaufen.",

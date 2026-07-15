@@ -276,10 +276,12 @@ closes the loop back to where the problem lives.
 
 **Planned refinements (not yet built):**
 
-- **Financial awareness**, once Receipt Scanner Milestone 2 (splitting)
-  exists — the summary should be able to surface money-related open
-  points too (e.g. receipts scanned but not yet split, or someone still
-  owing money), the same way it currently surfaces ride/shopping gaps.
+- **Financial awareness** — Cost Splitting Milestone 2 (see below) now
+  exists, so this is unblocked, but it isn't implemented yet. The summary
+  should eventually be able to surface money-related open points too (e.g.
+  receipts scanned but not yet split, or someone still owing money), the
+  same way it currently surfaces ride/shopping gaps. Flagged as a future
+  Milestone 3 candidate, not started.
 
 ---
 
@@ -289,8 +291,9 @@ closes the loop back to where the problem lives.
 this is the deliberate first milestone toward it, scoped narrowly on
 purpose: capture a photo of a receipt, extract it into an editable
 itemized list, and let anyone correct it by hand. **No splitting logic
-exists yet** — no per-participant assignment, no equal-split math, no
-"who owes what." That's Milestone 2, described below, not forgotten scope.
+exists in this milestone** — no per-participant assignment, no equal-split
+math, no "who owes what." That's **Milestone 2**, shipped separately — see
+"Cost Splitting — Milestone 2" below.
 
 **Where:** a new **Rechnung** (Receipt) tab — the fourth tab, before
 Location. Justified as a genuinely new tab (rather than folded into an
@@ -340,12 +343,9 @@ milestone. Consistent with how the Contribution Ledger already treats
 
 **Known trade-offs, documented not solved:**
 
-- No bill-splitting math yet — this milestone is capture + review only.
-  **Milestone 2** (the deliberate next step, not deferred indefinitely) is:
-  equal-split-by-default across participants, with the ability to assign a
-  specific line item to specific participants, or exclude someone from a
-  line item entirely (e.g. one person's individual snack shouldn't be
-  split across everyone who came).
+- No bill-splitting math in this milestone — capture + review only. See
+  "Cost Splitting — Milestone 2" below for the split/settlement math that
+  builds on top of this.
 - The receipt photo is sent to a third-party LLM API for extraction, same
   low-stakes/conscious-choice trade-off already documented for the AI
   Event Summary above.
@@ -353,6 +353,67 @@ milestone. Consistent with how the Contribution Ledger already treats
   Ledger's existing trust model — acceptable for a small trusted-friends
   group, would need revisiting if a receipt's dollar amounts become a
   higher-stakes target for accidental or malicious edits.
+
+---
+
+## Cost Splitting — Milestone 2 (shipped)
+
+**Purpose.** Milestone 1 (above) stopped at capture + review — no per-
+participant assignment, no equal-split math, no "who owes what." This
+milestone closes that gap: the actual point of scanning a receipt is
+figuring out who owes whom, and that's what this delivers. Still inside
+the existing Receipt tab — no new tab, per this doc's own principle
+against tab sprawl.
+
+**Equal-split-by-default, with include/exclude.** Every `ReceiptLineItem`
+gets a `ReceiptLineItemSplit` row for each participant currently in the
+party at the moment the line item is created (both the AI-extracted bulk
+create and a manually-added item) — existence of a row means "included in
+this item's split," matching the Contribution Ledger's own existence-based
+pattern. That makes "split equally across everyone" the default with no
+separate flag, and anyone can tap a participant's name on a line item to
+include or exclude them (e.g. one person's individual snack shouldn't be
+split across everyone who came). Like Contribution, splits are a snapshot
+at creation time — a participant who joins after a receipt/line item
+already exists isn't retroactively added to its split. The last remaining
+included participant on a line item can't be excluded — every item must
+stay attributed to at least one person.
+
+**Payer tracking.** Each `Receipt` can record who paid the store
+(`paidByParticipantId`), settable/clearable by any joined participant —
+same open-collaboration model as everything else on this tab, not
+restricted to whoever scanned it.
+
+**Settlement.** From every receipt's payer and every line item's included
+participants, the app computes each participant's net balance (what they
+paid minus what they owe) and then simplifies the resulting debts into a
+minimal set of "X owes Y" transactions via a greedy
+largest-creditor/largest-debtor matching — shown above the receipt list as
+a compact per-participant balance plus a settlement transaction list.
+Rounding: a line item's price is floor-divided across its included
+participants, with the leftover cent(s) handed one at a time to the front
+of a stable participant order, so totals always reconcile exactly.
+
+**Permissions.** Same fully-open model as Milestone 1 — any joined
+participant can toggle any other participant's split inclusion or set any
+participant as a receipt's payer. This is a deliberate difference from the
+Contribution Ledger's "edit only your own row": receipts already treat
+"anyone can correct anything" as the norm, and requiring the *included*
+person specifically to tap their own inclusion would make it needlessly
+awkward for whoever's actually looking at the receipt to fix a mistake.
+
+**Known trade-offs, documented not solved:**
+
+- Greedy debt-simplification isn't provably minimal (a smarter solver
+  could occasionally produce fewer transactions) — acceptable for this
+  group size, not worth the complexity of an optimal algorithm.
+- Only equal-among-included splits exist — no weighted/percentage splits
+  (e.g. "Alice had two of these, everyone else had one").
+- No currency conversion — same single-currency (EUR) assumption as
+  Milestone 1.
+- Settlement is recomputed from scratch on every page load rather than
+  stored — fine at this data volume, would need revisiting if a party
+  accumulates enough receipts/line items for this to matter.
 
 ---
 
@@ -368,10 +429,11 @@ milestone. Consistent with how the Contribution Ledger already treats
   `Intl` locale maps in `lib/party-datetime.ts` / `lib/format-cents.ts` and
   the metadata map in `app/layout.tsx` — no other architectural change
   needed.
-- **Cost splitting Milestone 2** — see "Receipt Scanner — Milestone 1"
-  above for the full plan already agreed: equal-split-by-default across
-  participants, with the ability to assign a specific line item to
-  specific participants or exclude someone.
+- **AI Event Summary financial awareness** — now unblocked by Cost
+  Splitting Milestone 2 (above), but not implemented as part of it. A
+  future Milestone 3 candidate: surface money-related open points (e.g.
+  receipts scanned but not yet split, or someone still owing money) the
+  same way the summary already surfaces ride/shopping gaps.
 
 ## Open Questions
 

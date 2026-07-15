@@ -77,6 +77,17 @@ export async function scanReceipt(
 
     const { store, items } = response.parsed_output;
 
+    // Every participant currently in the party gets a split row on each
+    // new line item, so "split equally across everyone" is the default —
+    // see prisma/schema.prisma's ReceiptLineItemSplit doc-comment. Like
+    // Contribution, this is a snapshot at creation time: participants who
+    // join later aren't retroactively added.
+    const currentParticipants = await prisma.participant.findMany({
+      where: { partyId: participant.partyId },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
+    });
+
     // Extracted values come from a model reading a possibly low-quality
     // photo — validate/clamp each one through the same bounds manual edits
     // go through (receiptLineItemSchema) rather than a separate ad hoc
@@ -112,6 +123,9 @@ export async function scanReceipt(
             priceCents: item.priceCents,
             quantity: item.quantity,
             position: index,
+            splits: {
+              create: currentParticipants.map((p) => ({ participantId: p.id })),
+            },
           })),
         },
       },
@@ -240,6 +254,13 @@ export async function addReceiptLineItem(
         where: { receiptId },
         _max: { position: true },
       });
+      // Same "everyone included by default" snapshot as scanReceipt's bulk
+      // create — see prisma/schema.prisma's ReceiptLineItemSplit doc-comment.
+      const currentParticipants = await tx.participant.findMany({
+        where: { partyId: participant.partyId },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+      });
       await tx.receiptLineItem.create({
         data: {
           receiptId,
@@ -247,6 +268,9 @@ export async function addReceiptLineItem(
           priceCents: parsed.data.priceCents,
           quantity: parsed.data.quantity,
           position: (highest._max.position ?? -1) + 1,
+          splits: {
+            create: currentParticipants.map((p) => ({ participantId: p.id })),
+          },
         },
       });
     });

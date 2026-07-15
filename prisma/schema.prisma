@@ -24,38 +24,38 @@ enum ItemCategory {
 /// A single grill party. `slug` is the unguessable public id used in the
 /// shareable URL — it is the only "authorization" a visitor needs.
 model Party {
-  id        String   @id @default(cuid())
-  slug      String   @unique
+  id             String   @id @default(cuid())
+  slug           String   @unique
   /// Held only by the creator's browser (localStorage), never a cookie —
   /// same trust model as Participant.editToken. Lets whoever created a
   /// party manage it (edit details, cancel, unmark purchases, remove
   /// guests/contributions) without needing the app-wide admin passcode.
   /// A global admin can always do the same for every party regardless.
-  organizerToken String @unique @default(cuid())
-  title     String
-  startsAt  DateTime
-  location  String
+  organizerToken String   @unique @default(cuid())
+  title          String
+  startsAt       DateTime
+  location       String
   /// General note shown on the Guests tab. Independent from `locationNote`
   /// below — the two are separate coordination contexts even though they
   /// share the same lightweight note-widget UI.
-  notes     String?
+  notes          String?
   /// Location/logistics-specific note shown on the Location tab (e.g.
   /// "parking is on the street, ring the doorbell twice"). Independent
   /// from `notes` above.
-  locationNote String?
+  locationNote   String?
   /// Optional freeform note shown on the merged Shopping List tab (v4:
   /// Shared Purchases and Shopping List are one screen again) — e.g.
   /// "everyone grills their own meat, just chip in for extras".
-  note      String?
+  note           String?
   /// Optional freeform note shown on Things People Bring — a separate note
   /// from `note` above since it's a different coordination context (e.g.
   /// "please bring your own plates/cups").
-  bringNote String?
+  bringNote      String?
 
   /// Cached AI Event Summary (see PRODUCT.md). Regenerated on demand, not
   /// automatically — these three fields are only ever written together.
   aiSummaryRecap       String?
-  aiSummaryOpenPoints  String[] @default([])
+  aiSummaryOpenPoints  String[]  @default([])
   aiSummaryGeneratedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -86,9 +86,11 @@ model Participant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contributions   Contribution[]
-  purchasedItems  Item[]         @relation("PurchasedItems")
-  scannedReceipts Receipt[]
+  contributions         Contribution[]
+  purchasedItems        Item[]                 @relation("PurchasedItems")
+  scannedReceipts       Receipt[]              @relation("ScannedReceipts")
+  paidReceipts          Receipt[]              @relation("PaidReceipts")
+  receiptLineItemSplits ReceiptLineItemSplit[]
 
   @@index([partyId])
   @@map("participants")
@@ -154,7 +156,13 @@ model Receipt {
   /// items, matching this app's open-collaboration model. SetNull (not
   /// Cascade) so the receipt survives that participant later leaving.
   scannedByParticipantId String?
-  scannedBy              Participant? @relation(fields: [scannedByParticipantId], references: [id], onDelete: SetNull)
+  scannedBy              Participant? @relation("ScannedReceipts", fields: [scannedByParticipantId], references: [id], onDelete: SetNull)
+  /// Whoever paid the store for this receipt, for settlement purposes
+  /// (Milestone 2 of Cost Splitting). Nullable — a receipt can exist
+  /// before anyone records who paid. SetNull, same reasoning as
+  /// scannedByParticipantId: the receipt survives that participant leaving.
+  paidByParticipantId    String?
+  paidBy                 Participant? @relation("PaidReceipts", fields: [paidByParticipantId], references: [id], onDelete: SetNull)
   /// AI-extracted store name, e.g. "REWE" — nullable since extraction may
   /// not find one (faded print, cropped photo).
   store                  String?
@@ -163,6 +171,7 @@ model Receipt {
   lineItems ReceiptLineItem[]
 
   @@index([partyId])
+  @@index([paidByParticipantId])
   @@map("receipts")
 }
 
@@ -182,6 +191,29 @@ model ReceiptLineItem {
   /// other natural ordering.
   position   Int
 
+  splits ReceiptLineItemSplit[]
+
   @@index([receiptId])
   @@map("receipt_line_items")
+}
+
+/// Which participants share a given ReceiptLineItem's cost (Milestone 2 of
+/// Cost Splitting). Existence-based, exactly like Contribution: a row here
+/// means that participant is included in this line item's equal split; no
+/// row means excluded. One row per current party participant is created
+/// at line-item-creation time (both scanReceipt's bulk create and
+/// addReceiptLineItem), so "split equally across everyone" is the default
+/// with no separate flag needed — and, like Contribution, splits are NOT
+/// retroactively created for participants who join after a receipt/line
+/// item already exists.
+model ReceiptLineItemSplit {
+  id            String          @id @default(cuid())
+  lineItemId    String
+  lineItem      ReceiptLineItem @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   Participant     @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@unique([lineItemId, participantId])
+  @@index([participantId])
+  @@map("receipt_line_item_splits")
 }

@@ -13,6 +13,7 @@ import {
   deleteReceiptLineItem,
   updateReceiptLineItem,
 } from "@/lib/actions/receipt";
+import { setLineItemSplitInclusion, setReceiptPayer } from "@/lib/actions/receipt-split";
 import { useI18n } from "@/lib/i18n/locale-context";
 import { formatCents } from "@/lib/format-cents";
 
@@ -21,12 +22,15 @@ export type ReceiptLineItemData = {
   name: string;
   priceCents: number;
   quantity: number;
+  includedParticipantIds: string[];
 };
 
 export type ReceiptData = {
   id: string;
   store: string | null;
   scannedByName: string | null;
+  paidByParticipantId: string | null;
+  paidByName: string | null;
   lineItems: ReceiptLineItemData[];
 };
 
@@ -40,7 +44,15 @@ function draftFromItem(item: ReceiptLineItemData): Draft {
 
 const EMPTY_DRAFT: Draft = { name: "", price: "", quantity: "1" };
 
-export function ReceiptCard({ slug, receipt }: { slug: string; receipt: ReceiptData }) {
+export function ReceiptCard({
+  slug,
+  receipt,
+  participants,
+}: {
+  slug: string;
+  receipt: ReceiptData;
+  participants: { id: string; name: string }[];
+}) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const stored = useStoredParticipant(slug);
@@ -54,6 +66,14 @@ export function ReceiptCard({ slug, receipt }: { slug: string; receipt: ReceiptD
   const [addDraft, setAddDraft] = useState<Draft>(EMPTY_DRAFT);
   const [addError, setAddError] = useState<string | null>(null);
   const [addBusy, setAddBusy] = useState(false);
+
+  const [payerBusy, setPayerBusy] = useState(false);
+  const [payerError, setPayerError] = useState<string | null>(null);
+  // Keyed by `${lineItemId}:${participantId}` — several split pills across
+  // different line items can theoretically be in flight, but each one is
+  // disabled individually while its own toggle is pending.
+  const [splitBusyKey, setSplitBusyKey] = useState<string | null>(null);
+  const [splitError, setSplitError] = useState<{ key: string; message: string } | null>(null);
 
   const total = receipt.lineItems.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
 
@@ -154,6 +174,41 @@ export function ReceiptCard({ slug, receipt }: { slug: string; receipt: ReceiptD
     }
   }
 
+  async function togglePayer(targetParticipantId: string) {
+    if (!stored) return;
+    const nextPayer = receipt.paidByParticipantId === targetParticipantId ? null : targetParticipantId;
+    setPayerBusy(true);
+    setPayerError(null);
+    const result = await setReceiptPayer(slug, stored.participantId, stored.editToken, receipt.id, nextPayer);
+    setPayerBusy(false);
+    if (!result.success) {
+      setPayerError(result.error ?? t.common.actionFailed);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function toggleSplitInclusion(lineItemId: string, targetParticipantId: string, nextIncluded: boolean) {
+    if (!stored) return;
+    const key = `${lineItemId}:${targetParticipantId}`;
+    setSplitBusyKey(key);
+    setSplitError(null);
+    const result = await setLineItemSplitInclusion(
+      slug,
+      stored.participantId,
+      stored.editToken,
+      lineItemId,
+      targetParticipantId,
+      nextIncluded,
+    );
+    setSplitBusyKey(null);
+    if (!result.success) {
+      setSplitError({ key, message: result.error ?? t.common.actionFailed });
+      return;
+    }
+    router.refresh();
+  }
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border p-3">
       <div className="flex items-center justify-between gap-2">
@@ -181,6 +236,35 @@ export function ReceiptCard({ slug, receipt }: { slug: string; receipt: ReceiptD
           {t.receipt.scannedBy(receipt.scannedByName)}
         </span>
       )}
+
+      <div className="flex flex-col gap-1">
+        <span className="text-muted-foreground text-xs font-medium">{t.receipt.paidByLabel}</span>
+        {stored ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {participants.map((p) => {
+              const active = receipt.paidByParticipantId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={payerBusy}
+                  onClick={() => togglePayer(p.id)}
+                  aria-label={active ? t.receipt.clearPayerAria(p.name) : t.receipt.selectPayerAria(p.name)}
+                  className={cn(
+                    "flex h-11 items-center rounded-full px-3.5 text-sm font-medium",
+                    active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <span className="text-sm">{receipt.paidByName ?? "—"}</span>
+        )}
+        {payerError && <p className="text-destructive text-xs">{payerError}</p>}
+      </div>
 
       {receipt.lineItems.length === 0 && (
         <p className="text-muted-foreground text-sm">{t.receipt.noLineItems}</p>
@@ -292,6 +376,43 @@ export function ReceiptCard({ slug, receipt }: { slug: string; receipt: ReceiptD
               )}
               {rowError?.id === item.id && (
                 <p className="text-destructive text-xs">{rowError.message}</p>
+              )}
+
+              {participants.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs">{t.receipt.splitWithLabel}</span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {participants.map((p) => {
+                      const included = item.includedParticipantIds.includes(p.id);
+                      const key = `${item.id}:${p.id}`;
+                      const splitBusy = splitBusyKey === key;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          disabled={!stored || splitBusy}
+                          onClick={() => toggleSplitInclusion(item.id, p.id, !included)}
+                          aria-label={
+                            included
+                              ? t.receipt.toggleSplitExcludeAria(p.name, item.name)
+                              : t.receipt.toggleSplitIncludeAria(p.name, item.name)
+                          }
+                          className={cn(
+                            "flex h-11 items-center rounded-full px-3.5 text-sm font-medium",
+                            included
+                              ? "bg-primary/15 text-primary"
+                              : "bg-muted text-muted-foreground opacity-60",
+                          )}
+                        >
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {splitError?.key.startsWith(`${item.id}:`) && (
+                    <p className="text-destructive text-xs">{splitError.message}</p>
+                  )}
+                </div>
               )}
             </li>
           );

@@ -9,6 +9,7 @@ import { RideSection } from "@/components/party/ride-section";
 import { ShoppingListSection } from "@/components/party/shopping-list-section";
 import { LocationSection } from "@/components/party/location-section";
 import { ReceiptSection } from "@/components/party/receipt-section";
+import { ReceiptSettlementSummary } from "@/components/party/receipt-settlement-summary";
 import { PartyHeader } from "@/components/party/party-header";
 import { PartyShell } from "@/components/party/party-shell";
 import { AiSummary } from "@/components/party/ai-summary";
@@ -21,6 +22,7 @@ import { getLocale } from "@/lib/i18n/get-locale";
 import { dictionaries } from "@/lib/i18n/dictionaries";
 import { isAdmin } from "@/lib/admin-auth";
 import { getTheme } from "@/lib/get-theme";
+import { computeNetBalances, simplifyDebts, type SplitReceipt } from "@/lib/settlement";
 
 export default async function PartyPage({
   params,
@@ -70,8 +72,16 @@ export default async function PartyPage({
           id: true,
           store: true,
           scannedBy: { select: { name: true } },
+          paidByParticipantId: true,
+          paidBy: { select: { name: true } },
           lineItems: {
-            select: { id: true, name: true, priceCents: true, quantity: true },
+            select: {
+              id: true,
+              name: true,
+              priceCents: true,
+              quantity: true,
+              splits: { select: { participantId: true } },
+            },
             orderBy: { position: "asc" },
           },
         },
@@ -108,7 +118,39 @@ export default async function PartyPage({
     id: receipt.id,
     store: receipt.store,
     scannedByName: receipt.scannedBy?.name ?? null,
-    lineItems: receipt.lineItems,
+    paidByParticipantId: receipt.paidByParticipantId,
+    paidByName: receipt.paidBy?.name ?? null,
+    lineItems: receipt.lineItems.map((lineItem) => ({
+      id: lineItem.id,
+      name: lineItem.name,
+      priceCents: lineItem.priceCents,
+      quantity: lineItem.quantity,
+      includedParticipantIds: lineItem.splits.map((s) => s.participantId),
+    })),
+  }));
+
+  // Settlement is recomputed on every render from data already fetched
+  // here — nothing about who-owes-whom is stored (see PRODUCT.md's Cost
+  // Splitting Milestone 2 trade-offs).
+  const participantIdsInOrder = party.participants.map((p) => p.id);
+  const settlementReceipts: SplitReceipt[] = party.receipts.map((receipt) => ({
+    paidByParticipantId: receipt.paidByParticipantId,
+    lineItems: receipt.lineItems.map((lineItem) => ({
+      lineTotalCents: lineItem.priceCents * lineItem.quantity,
+      includedParticipantIds: lineItem.splits.map((s) => s.participantId),
+    })),
+  }));
+  const participantNameById = new Map(party.participants.map((p) => [p.id, p.name]));
+  const netBalances = computeNetBalances(participantIdsInOrder, settlementReceipts);
+  const settlementBalances = participantIdsInOrder.map((participantId) => ({
+    participantId,
+    participantName: participantNameById.get(participantId) ?? "",
+    netCents: netBalances.get(participantId) ?? 0,
+  }));
+  const settlementTransactions = simplifyDebts(netBalances).map((transaction) => ({
+    fromName: participantNameById.get(transaction.fromParticipantId) ?? "",
+    toName: participantNameById.get(transaction.toParticipantId) ?? "",
+    amountCents: transaction.amountCents,
   }));
 
   const tabs = [
@@ -191,8 +233,16 @@ export default async function PartyPage({
             />
           </TabsContent>
 
-          <TabsContent value="receipts" className="animate-in fade-in duration-200">
-            <ReceiptSection slug={party.slug} receipts={receipts} />
+          <TabsContent value="receipts" className="animate-in fade-in flex flex-col gap-4 duration-200">
+            {receipts.length > 0 && (
+              <ReceiptSettlementSummary
+                balances={settlementBalances}
+                transactions={settlementTransactions}
+                t={t}
+                locale={locale}
+              />
+            )}
+            <ReceiptSection slug={party.slug} receipts={receipts} participants={party.participants} />
           </TabsContent>
 
           <div className="fixed inset-x-0 bottom-0 z-10 flex justify-center bg-background pb-[env(safe-area-inset-bottom)]">
