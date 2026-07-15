@@ -195,8 +195,8 @@ export default async function PartyPage({
             <ReceiptSection slug={party.slug} receipts={receipts} />
           </TabsContent>
 
-          <div className="fixed inset-x-0 bottom-0 z-10 border-t-2 border-muted-foreground/30 bg-background pb-[env(safe-area-inset-bottom)]">
-            <TabsList className="mx-auto !h-auto w-full max-w-md justify-between gap-0 rounded-none bg-transparent p-0">
+          <div className="fixed inset-x-0 bottom-0 z-10 flex justify-center bg-background pb-[env(safe-area-inset-bottom)]">
+            <TabsList className="!h-auto w-full max-w-md justify-between gap-0 rounded-none border-t-2 border-muted-foreground/30 bg-transparent p-0">
               {tabs.map(({ value, label, icon: Icon }, index) => (
                 <TabsTrigger
                   key={value}

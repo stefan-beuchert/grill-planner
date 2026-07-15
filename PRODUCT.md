@@ -285,14 +285,6 @@ closes the loop back to where the problem lives.
   exists — the summary should be able to surface money-related open
   points too (e.g. receipts scanned but not yet split, or someone still
   owing money), the same way it currently surfaces ride/shopping gaps.
-- **Prompt fix: contributor ≠ obligated buyer.** The Shopping List
-  context fed to the model includes each item's contributor breakdown
-  (who pledged what quantity/cost). That must not be read by the model as
-  "this person is responsible for physically buying/bringing the item" —
-  per the Contribution Ledger, *any* participant can mark *any* Shopping
-  List item purchased regardless of who contributed to it. The prompt
-  needs tightening so open-points reasoning doesn't imply an obligation
-  that doesn't actually exist in the product.
 
 ---
 

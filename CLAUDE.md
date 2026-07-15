@@ -70,11 +70,6 @@ Assume that more than 90% of users will access the application on their smartpho
 
 Desktop support is still required, but every feature should be designed for mobile first.
 
-**Known gap:** the bottom tab bar isn't desktop-tuned yet — on wide
-viewports it should be centered in the middle of the screen rather than
-just inheriting the mobile layout's positioning. Not yet done; noted here
-so it isn't lost.
-
 The UI should feel modern and clean.
 
 Inspired by:
@@ -261,19 +256,15 @@ Avoid
 
 Refactor when duplication appears.
 
-**Established, but not yet universal, patterns worth knowing before touching
-these areas:**
+**Established patterns worth knowing before touching these areas:**
 
 - Server Actions return `{success: true, ...} | {success: false, error?: string}`
-  rather than throwing, everywhere. Mutating Prisma calls in
-  `lib/actions/item.ts` and `lib/actions/admin.ts` are additionally wrapped
-  in `try/catch` with `console.error("<actionName> failed", {context}, err)`
-  — this is the pattern to extend, not the `lib/actions/party.ts` /
-  `participant.ts` / `ride.ts` style (no try/catch at all) or
-  `ai-summary.ts`'s (bare `catch {}`, no logging). Bringing those three
-  files up to the `item.ts`/`admin.ts` standard is a reasonable thing to do
-  *while already touching them* for another reason — not a standalone
-  cleanup task.
+  rather than throwing, everywhere. Mutating Prisma calls across every
+  `lib/actions/*.ts` file (`item.ts`, `admin.ts`, `party.ts`,
+  `participant.ts`, `ride.ts`, `ai-summary.ts`, `receipt.ts`) are wrapped in
+  `try/catch` with `console.error("<actionName> failed", {context}, err)` —
+  this is now the universal pattern, not just an item.ts/admin.ts
+  convention. Keep new/edited actions consistent with it.
 - Every user-facing string goes through `t.<namespace>.<key>` —
   `lib/i18n/dictionaries/de.ts` and `en.ts` must be updated together, never
   just one.

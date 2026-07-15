@@ -20,6 +20,7 @@ const aiSummarySchema = z.object({
 const LANGUAGE_NAMES: Record<Locale, string> = {
   en: "English",
   de: "German",
+  es: "Mexican Spanish — write casually and lean into everyday Mexican slang/expressions (e.g. \"órale\", \"qué onda\", \"chido\", \"cuates\", \"al toque\") wherever it fits naturally, while staying clear and friendly",
 };
 
 const SYSTEM_PROMPT = `You help summarize a private BBQ/grill party organized through the Grill Planner app. You'll be given structured data about one party: the guest list and ride status, what's being bought together (the Shopping List), what people are bringing themselves, any organizer notes, the weather forecast, and the location.
@@ -40,6 +41,8 @@ CRITICAL RULE for openPoints — distinguish unmet needs from unassigned tasks:
 - For an unassigned task or missing item (nobody has brought a grill, no drinks signed up, a category is empty), phrase it impersonally around the missing thing, with NO guest named — anyone could pick it up. Write "No one has signed up to bring a grill yet," never "Tom hasn't brought anything."
 - For a specific guest's unmet need that only makes sense tied to that person (e.g. they need a ride and no driver has offered), it's fine — and more useful — to name them, since the point can't be acted on otherwise. Write "Tom needs a ride and no one has offered seats yet."
 - Never phrase anything as a guest's failure or omission ("X hasn't done Y", "X hasn't contributed"). The distinction is need vs. blame, not named vs. unnamed.
+
+Shopping List contributor breakdown, read carefully: each item's "[Name qty, ...]" breakdown shows who pledged a quantity toward that item — it is NOT an assignment of who has to go buy it. Any guest can mark any Shopping List item as purchased, regardless of who contributed to it. Never imply that a contributor is responsible for physically buying or bringing an item, and never flag "X pledged this but hasn't bought it yet" as an open point — pledging and buying are unrelated actions in this app.
 
 If there are no real open points, return an empty list — do not invent filler just to have something to say.
 
@@ -200,7 +203,8 @@ export async function generateAiSummary(
         aiSummaryGeneratedAt: new Date(),
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("generateAiSummary failed", { slug, participantId }, err);
     return { success: false as const, error: t.aiSummary.generationFailed };
   }
 
