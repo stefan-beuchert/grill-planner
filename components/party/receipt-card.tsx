@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Pencil, Plus, Receipt as ReceiptIcon, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, Pencil, Plus, Receipt as ReceiptIcon, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -48,14 +48,18 @@ export function ReceiptCard({
   slug,
   receipt,
   participants,
+  defaultExpanded,
 }: {
   slug: string;
   receipt: ReceiptData;
   participants: { id: string; name: string }[];
+  defaultExpanded: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const stored = useStoredParticipant(slug);
+
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -76,6 +80,7 @@ export function ReceiptCard({
   const [splitError, setSplitError] = useState<{ key: string; message: string } | null>(null);
 
   const total = receipt.lineItems.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
+  const storeLabel = receipt.store || t.receipt.unknownStore;
 
   function parseDraft(value: Draft): { name: string; priceCents: number; quantity: number } | null {
     const priceNumber = Number(value.price.replace(",", "."));
@@ -212,288 +217,307 @@ export function ReceiptCard({
   return (
     <div className="flex flex-col gap-3 rounded-xl border p-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-1.5 truncate text-base font-semibold">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-label={
+            expanded ? t.receipt.collapseReceiptAria(storeLabel) : t.receipt.expandReceiptAria(storeLabel)
+          }
+          className="flex h-11 min-w-0 flex-1 items-center gap-1.5 text-left"
+        >
+          <ChevronRight
+            className={cn(
+              "text-muted-foreground size-4 shrink-0 transition-transform",
+              expanded && "rotate-90",
+            )}
+            aria-hidden="true"
+          />
           <ReceiptIcon className="text-primary size-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">{receipt.store || t.receipt.unknownStore}</span>
-        </span>
-        {stored && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            disabled={busyId === receipt.id}
-            onClick={removeReceipt}
-            className="text-destructive h-11 w-11"
-            aria-label={t.receipt.deleteReceipt}
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        )}
+          <span className="truncate text-base font-semibold">{storeLabel}</span>
+        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-sm font-semibold tabular-nums">{formatCents(total, locale)}</span>
+          {stored && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={busyId === receipt.id}
+              onClick={removeReceipt}
+              className="text-destructive h-11 w-11"
+              aria-label={t.receipt.deleteReceipt}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
-      {receipt.scannedByName && (
-        <span className="text-muted-foreground text-xs">
-          {t.receipt.scannedBy(receipt.scannedByName)}
-        </span>
-      )}
+      {expanded && (
+        <>
+          {receipt.scannedByName && (
+            <span className="text-muted-foreground text-xs">
+              {t.receipt.scannedBy(receipt.scannedByName)}
+            </span>
+          )}
 
-      <div className="flex flex-col gap-1">
-        <span className="text-muted-foreground text-xs font-medium">{t.receipt.paidByLabel}</span>
-        {stored ? (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {participants.map((p) => {
-              const active = receipt.paidByParticipantId === p.id;
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground text-xs font-medium">{t.receipt.paidByLabel}</span>
+            {stored ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {participants.map((p) => {
+                  const active = receipt.paidByParticipantId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={payerBusy}
+                      onClick={() => togglePayer(p.id)}
+                      aria-label={
+                        active ? t.receipt.clearPayerAria(p.name) : t.receipt.selectPayerAria(p.name)
+                      }
+                      className={cn(
+                        "flex h-11 items-center rounded-full px-3.5 text-sm font-medium",
+                        active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {p.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <span className="text-sm">{receipt.paidByName ?? "—"}</span>
+            )}
+            {payerError && <p className="text-destructive text-xs">{payerError}</p>}
+          </div>
+
+          {receipt.lineItems.length === 0 && (
+            <p className="text-muted-foreground text-sm">{t.receipt.noLineItems}</p>
+          )}
+
+          <ul className="flex flex-col gap-1.5">
+            {receipt.lineItems.map((item) => {
+              const editing = editingId === item.id;
+              const busy = busyId === item.id;
               return (
-                <button
-                  key={p.id}
-                  type="button"
-                  disabled={payerBusy}
-                  onClick={() => togglePayer(p.id)}
-                  aria-label={active ? t.receipt.clearPayerAria(p.name) : t.receipt.selectPayerAria(p.name)}
+                <li
+                  key={item.id}
                   className={cn(
-                    "flex h-11 items-center rounded-full px-3.5 text-sm font-medium",
-                    active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
+                    "flex flex-col gap-1.5 rounded-lg border px-2.5 py-1.5",
+                    editing && "border-primary bg-accent",
                   )}
                 >
-                  {p.name}
-                </button>
+                  {editing ? (
+                    <div className="flex flex-col gap-1.5">
+                      <Input
+                        value={draft.name}
+                        onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                        placeholder={t.receipt.namePlaceholder}
+                        className="h-11 text-base"
+                        autoComplete="off"
+                      />
+                      <div className="flex gap-1.5">
+                        <Input
+                          value={draft.price}
+                          onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
+                          placeholder={t.receipt.pricePlaceholder}
+                          inputMode="decimal"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          className="h-11 flex-1 text-base"
+                        />
+                        <Input
+                          value={draft.quantity}
+                          onChange={(e) => setDraft((d) => ({ ...d, quantity: e.target.value }))}
+                          placeholder={t.receipt.quantityPlaceholder}
+                          inputMode="numeric"
+                          type="number"
+                          step="1"
+                          min="1"
+                          className="h-11 w-20 text-base"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          disabled={busy}
+                          onClick={() => setEditingId(null)}
+                          className="h-11 w-11 shrink-0"
+                          aria-label={t.receipt.cancelEditLineItemAria(item.name)}
+                        >
+                          <X className="size-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="icon"
+                          disabled={busy}
+                          onClick={() => saveEditing(item.id)}
+                          className="h-11 w-11 shrink-0"
+                          aria-label={t.receipt.saveLineItemAria(item.name)}
+                        >
+                          <Check className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-base">
+                        {item.name}
+                        {item.quantity > 1 && (
+                          <span className="text-muted-foreground ml-1.5 text-sm font-normal">
+                            × {item.quantity}
+                          </span>
+                        )}
+                      </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-sm font-medium tabular-nums">
+                          {formatCents(item.priceCents * item.quantity, locale)}
+                        </span>
+                        {stored && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => startEditing(item)}
+                              aria-label={t.receipt.editLineItemAria(item.name)}
+                              className="text-muted-foreground hover:text-foreground flex h-11 w-11 items-center justify-center"
+                            >
+                              <Pencil className="size-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => removeLineItem(item.id)}
+                              aria-label={t.receipt.deleteLineItemAria(item.name)}
+                              className="text-muted-foreground hover:text-destructive flex h-11 w-11 items-center justify-center"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {rowError?.id === item.id && (
+                    <p className="text-destructive text-xs">{rowError.message}</p>
+                  )}
+
+                  {participants.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground text-xs">{t.receipt.splitWithLabel}</span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {participants.map((p) => {
+                          const included = item.includedParticipantIds.includes(p.id);
+                          const key = `${item.id}:${p.id}`;
+                          const splitBusy = splitBusyKey === key;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              disabled={!stored || splitBusy}
+                              onClick={() => toggleSplitInclusion(item.id, p.id, !included)}
+                              aria-label={
+                                included
+                                  ? t.receipt.toggleSplitExcludeAria(p.name, item.name)
+                                  : t.receipt.toggleSplitIncludeAria(p.name, item.name)
+                              }
+                              className={cn(
+                                "flex h-11 items-center rounded-full px-3.5 text-sm font-medium",
+                                included
+                                  ? "bg-primary/15 text-primary"
+                                  : "bg-muted text-muted-foreground opacity-60",
+                              )}
+                            >
+                              {p.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {splitError?.key.startsWith(`${item.id}:`) && (
+                        <p className="text-destructive text-xs">{splitError.message}</p>
+                      )}
+                    </div>
+                  )}
+                </li>
               );
             })}
-          </div>
-        ) : (
-          <span className="text-sm">{receipt.paidByName ?? "—"}</span>
-        )}
-        {payerError && <p className="text-destructive text-xs">{payerError}</p>}
-      </div>
+          </ul>
 
-      {receipt.lineItems.length === 0 && (
-        <p className="text-muted-foreground text-sm">{t.receipt.noLineItems}</p>
-      )}
-
-      <ul className="flex flex-col gap-1.5">
-        {receipt.lineItems.map((item) => {
-          const editing = editingId === item.id;
-          const busy = busyId === item.id;
-          return (
-            <li
-              key={item.id}
-              className={cn(
-                "flex flex-col gap-1.5 rounded-lg border px-2.5 py-1.5",
-                editing && "border-primary bg-accent",
-              )}
-            >
-              {editing ? (
-                <div className="flex flex-col gap-1.5">
+          {stored &&
+            (addingItem ? (
+              <div className="flex flex-col gap-1.5 rounded-lg border px-2.5 py-1.5">
+                <Input
+                  value={addDraft.name}
+                  onChange={(e) => setAddDraft((d) => ({ ...d, name: e.target.value }))}
+                  placeholder={t.receipt.namePlaceholder}
+                  className="h-11 text-base"
+                  autoComplete="off"
+                />
+                <div className="flex gap-1.5">
                   <Input
-                    value={draft.name}
-                    onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-                    placeholder={t.receipt.namePlaceholder}
-                    className="h-11 text-base"
-                    autoComplete="off"
+                    value={addDraft.price}
+                    onChange={(e) => setAddDraft((d) => ({ ...d, price: e.target.value }))}
+                    placeholder={t.receipt.pricePlaceholder}
+                    inputMode="decimal"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="h-11 flex-1 text-base"
                   />
-                  <div className="flex gap-1.5">
-                    <Input
-                      value={draft.price}
-                      onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
-                      placeholder={t.receipt.pricePlaceholder}
-                      inputMode="decimal"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="h-11 flex-1 text-base"
-                    />
-                    <Input
-                      value={draft.quantity}
-                      onChange={(e) => setDraft((d) => ({ ...d, quantity: e.target.value }))}
-                      placeholder={t.receipt.quantityPlaceholder}
-                      inputMode="numeric"
-                      type="number"
-                      step="1"
-                      min="1"
-                      className="h-11 w-20 text-base"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      disabled={busy}
-                      onClick={() => setEditingId(null)}
-                      className="h-11 w-11 shrink-0"
-                      aria-label={t.receipt.cancelEditLineItemAria(item.name)}
-                    >
-                      <X className="size-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      disabled={busy}
-                      onClick={() => saveEditing(item.id)}
-                      className="h-11 w-11 shrink-0"
-                      aria-label={t.receipt.saveLineItemAria(item.name)}
-                    >
-                      <Check className="size-4" />
-                    </Button>
-                  </div>
+                  <Input
+                    value={addDraft.quantity}
+                    onChange={(e) => setAddDraft((d) => ({ ...d, quantity: e.target.value }))}
+                    placeholder={t.receipt.quantityPlaceholder}
+                    inputMode="numeric"
+                    type="number"
+                    step="1"
+                    min="1"
+                    className="h-11 w-20 text-base"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={addBusy}
+                    onClick={() => {
+                      setAddingItem(false);
+                      setAddDraft(EMPTY_DRAFT);
+                      setAddError(null);
+                    }}
+                    className="h-11 w-11 shrink-0"
+                    aria-label={t.common.cancel}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    disabled={addBusy}
+                    onClick={submitAddItem}
+                    className="h-11 w-11 shrink-0"
+                    aria-label={t.receipt.addItemSubmit}
+                  >
+                    <Check className="size-4" />
+                  </Button>
                 </div>
-              ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-base">
-                    {item.name}
-                    {item.quantity > 1 && (
-                      <span className="text-muted-foreground ml-1.5 text-sm font-normal">
-                        × {item.quantity}
-                      </span>
-                    )}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-sm font-medium tabular-nums">
-                      {formatCents(item.priceCents * item.quantity, locale)}
-                    </span>
-                    {stored && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => startEditing(item)}
-                          aria-label={t.receipt.editLineItemAria(item.name)}
-                          className="text-muted-foreground hover:text-foreground flex h-11 w-11 items-center justify-center"
-                        >
-                          <Pencil className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => removeLineItem(item.id)}
-                          aria-label={t.receipt.deleteLineItemAria(item.name)}
-                          className="text-muted-foreground hover:text-destructive flex h-11 w-11 items-center justify-center"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              {rowError?.id === item.id && (
-                <p className="text-destructive text-xs">{rowError.message}</p>
-              )}
-
-              {participants.length > 0 && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground text-xs">{t.receipt.splitWithLabel}</span>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {participants.map((p) => {
-                      const included = item.includedParticipantIds.includes(p.id);
-                      const key = `${item.id}:${p.id}`;
-                      const splitBusy = splitBusyKey === key;
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          disabled={!stored || splitBusy}
-                          onClick={() => toggleSplitInclusion(item.id, p.id, !included)}
-                          aria-label={
-                            included
-                              ? t.receipt.toggleSplitExcludeAria(p.name, item.name)
-                              : t.receipt.toggleSplitIncludeAria(p.name, item.name)
-                          }
-                          className={cn(
-                            "flex h-11 items-center rounded-full px-3.5 text-sm font-medium",
-                            included
-                              ? "bg-primary/15 text-primary"
-                              : "bg-muted text-muted-foreground opacity-60",
-                          )}
-                        >
-                          {p.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {splitError?.key.startsWith(`${item.id}:`) && (
-                    <p className="text-destructive text-xs">{splitError.message}</p>
-                  )}
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-
-      {stored &&
-        (addingItem ? (
-          <div className="flex flex-col gap-1.5 rounded-lg border px-2.5 py-1.5">
-            <Input
-              value={addDraft.name}
-              onChange={(e) => setAddDraft((d) => ({ ...d, name: e.target.value }))}
-              placeholder={t.receipt.namePlaceholder}
-              className="h-11 text-base"
-              autoComplete="off"
-            />
-            <div className="flex gap-1.5">
-              <Input
-                value={addDraft.price}
-                onChange={(e) => setAddDraft((d) => ({ ...d, price: e.target.value }))}
-                placeholder={t.receipt.pricePlaceholder}
-                inputMode="decimal"
-                type="number"
-                step="0.01"
-                min="0"
-                className="h-11 flex-1 text-base"
-              />
-              <Input
-                value={addDraft.quantity}
-                onChange={(e) => setAddDraft((d) => ({ ...d, quantity: e.target.value }))}
-                placeholder={t.receipt.quantityPlaceholder}
-                inputMode="numeric"
-                type="number"
-                step="1"
-                min="1"
-                className="h-11 w-20 text-base"
-              />
+                {addError && <p className="text-destructive text-xs">{addError}</p>}
+              </div>
+            ) : (
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                disabled={addBusy}
-                onClick={() => {
-                  setAddingItem(false);
-                  setAddDraft(EMPTY_DRAFT);
-                  setAddError(null);
-                }}
-                className="h-11 w-11 shrink-0"
-                aria-label={t.common.cancel}
+                onClick={() => setAddingItem(true)}
+                className="h-11 gap-1.5 self-start text-sm"
               >
-                <X className="size-4" />
+                <Plus className="size-4" />
+                {t.receipt.addItem}
               </Button>
-              <Button
-                type="button"
-                size="icon"
-                disabled={addBusy}
-                onClick={submitAddItem}
-                className="h-11 w-11 shrink-0"
-                aria-label={t.receipt.addItemSubmit}
-              >
-                <Check className="size-4" />
-              </Button>
-            </div>
-            {addError && <p className="text-destructive text-xs">{addError}</p>}
-          </div>
-        ) : (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setAddingItem(true)}
-            className="h-11 gap-1.5 self-start text-sm"
-          >
-            <Plus className="size-4" />
-            {t.receipt.addItem}
-          </Button>
-        ))}
-
-      <div className="flex items-center justify-between border-t pt-2">
-        <span className="text-sm font-semibold">{t.receipt.total}</span>
-        <span className="text-base font-bold tabular-nums">{formatCents(total, locale)}</span>
-      </div>
+            ))}
+        </>
+      )}
     </div>
   );
 }

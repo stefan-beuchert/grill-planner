@@ -235,7 +235,6 @@ export const de = {
     quantityPlaceholder: "Menge",
     addItem: "Artikel manuell hinzufügen",
     addItemSubmit: "Hinzufügen",
-    total: "Gesamt",
     editLineItemAria: (name: string) => `${name} bearbeiten`,
     cancelEditLineItemAria: (name: string) => `Bearbeiten von ${name} abbrechen`,
     saveLineItemAria: (name: string) => `${name} speichern`,
@@ -243,6 +242,8 @@ export const de = {
     deleteReceipt: "Beleg löschen",
     deleteReceiptConfirm:
       "Diesen Beleg mit allen Artikeln löschen? Das kann nicht rückgängig gemacht werden.",
+    expandReceiptAria: (store: string) => `Details für ${store} anzeigen`,
+    collapseReceiptAria: (store: string) => `Details für ${store} ausblenden`,
     invalidPrice: "Gib einen gültigen Preis ein.",
     paidByLabel: "Bezahlt von",
     selectPayerAria: (name: string) => `${name} als Zahler festlegen`,

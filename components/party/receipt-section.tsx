@@ -123,8 +123,14 @@ export function ReceiptSection({
         <p className="text-muted-foreground text-sm">{t.receipt.empty}</p>
       ) : (
         <div className="flex flex-col gap-3">
-          {receipts.map((receipt) => (
-            <ReceiptCard key={receipt.id} slug={slug} receipt={receipt} participants={participants} />
+          {receipts.map((receipt, index) => (
+            <ReceiptCard
+              key={receipt.id}
+              slug={slug}
+              receipt={receipt}
+              participants={participants}
+              defaultExpanded={index === 0}
+            />
           ))}
         </div>
       )}
