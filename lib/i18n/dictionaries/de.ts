@@ -135,7 +135,6 @@ export const de = {
     driving: "Ich fahre",
     needsRide: "Brauche Fahrt",
     none: "Weder noch",
-    freeSeats: "Freie Plätze",
     fewerSeatsAria: "Weniger Plätze",
     moreSeatsAria: "Mehr Plätze",
     driverSeats: (name: string, seats: number) =>
@@ -199,8 +198,9 @@ export const de = {
     noForecastYet:
       "Die Vorhersage ist noch nicht verfügbar — sie erscheint etwa zwei Wochen vor der Party.",
     noMapLocation: "Dieser Ort konnte auf der Karte nicht gefunden werden.",
-    rainChance: (percent: number) => `${percent} % Regenwahrscheinlichkeit`,
     openInGoogleMaps: "In Google Maps öffnen",
+    mapTapHint: "Zum Erkunden der Karte tippen",
+    mapTapHintAria: "Tippen, um Verschieben und Zoomen der Karte zu aktivieren",
     weatherCodeUnknown: "Unbekannt",
     weatherCodes: {
       0: "Klarer Himmel",

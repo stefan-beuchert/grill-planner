@@ -136,7 +136,6 @@ export const es: Dictionary = {
     driving: "Manejando",
     needsRide: "Necesita aventón",
     none: "Ninguno",
-    freeSeats: "Asientos libres",
     fewerSeatsAria: "Menos asientos",
     moreSeatsAria: "Más asientos",
     driverSeats: (name: string, seats: number) =>
@@ -198,8 +197,9 @@ export const es: Dictionary = {
     noForecastLocation: "No encontramos esta ubicación para el pronóstico.",
     noForecastYet: "El pronóstico todavía no está disponible — aparece como dos semanas antes de la fiesta.",
     noMapLocation: "No encontramos esta ubicación en el mapa.",
-    rainChance: (percent: number) => `${percent}% de probabilidad de lluvia`,
     openInGoogleMaps: "Abrir en Google Maps",
+    mapTapHint: "Toca para explorar el mapa",
+    mapTapHintAria: "Toca para activar el desplazamiento y el zoom del mapa",
     weatherCodeUnknown: "Desconocido",
     weatherCodes: {
       0: "Cielo despejado",

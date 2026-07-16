@@ -136,7 +136,6 @@ export const en: Dictionary = {
     driving: "Driving",
     needsRide: "Need a ride",
     none: "Neither",
-    freeSeats: "Free seats",
     fewerSeatsAria: "Fewer seats",
     moreSeatsAria: "More seats",
     driverSeats: (name: string, seats: number) =>
@@ -198,8 +197,9 @@ export const en: Dictionary = {
     noForecastLocation: "Couldn't find this location for a forecast.",
     noForecastYet: "Forecast isn't available yet — it shows up about two weeks before the party.",
     noMapLocation: "Couldn't find this location on the map.",
-    rainChance: (percent: number) => `${percent}% chance of rain`,
     openInGoogleMaps: "Open in Google Maps",
+    mapTapHint: "Tap to explore the map",
+    mapTapHintAria: "Tap to enable panning and zooming on the map",
     weatherCodeUnknown: "Unknown",
     weatherCodes: {
       0: "Clear sky",

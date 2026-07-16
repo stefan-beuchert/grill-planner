@@ -1,8 +1,20 @@
-import { CloudSun, MapPin, Navigation } from "lucide-react";
+import {
+  Cloud,
+  CloudDrizzle,
+  CloudFog,
+  CloudLightning,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  MapPin,
+  Navigation,
+  Sun,
+} from "lucide-react";
 import { geocodeLocation, type Coordinates } from "@/lib/geocode";
 import { getWeatherForecast } from "@/lib/weather";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/components/party/section-heading";
+import { LocationMap } from "@/components/party/location-map";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 // Google's keyless "universal" URL scheme — works as a plain link and
@@ -13,6 +25,56 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 function googleMapsUrl(location: string, coords: Coordinates | null): string {
   const query = coords ? `${coords.latitude},${coords.longitude}` : location;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+// WMO weather codes (https://open-meteo.com/en/docs) → icon. Falls back to
+// CloudSun for anything unmapped rather than rendering nothing. Written as a
+// switch over literal JSX tags (rather than a code → component lookup map)
+// so no component reference is computed/created during another component's
+// render — see eslint-plugin-react-hooks's "static components" rule.
+function WeatherIcon({
+  code,
+  className,
+  label,
+}: {
+  code: number;
+  className?: string;
+  label?: string;
+}) {
+  const props = { className, role: "img" as const, "aria-label": label };
+  switch (code) {
+    case 0:
+      return <Sun {...props} />;
+    case 1:
+    case 2:
+      return <CloudSun {...props} />;
+    case 3:
+      return <Cloud {...props} />;
+    case 45:
+    case 48:
+      return <CloudFog {...props} />;
+    case 51:
+    case 53:
+    case 55:
+      return <CloudDrizzle {...props} />;
+    case 61:
+    case 63:
+    case 65:
+    case 80:
+    case 81:
+    case 82:
+      return <CloudRain {...props} />;
+    case 71:
+    case 73:
+    case 75:
+      return <CloudSnow {...props} />;
+    case 95:
+    case 96:
+    case 99:
+      return <CloudLightning {...props} />;
+    default:
+      return <CloudSun {...props} />;
+  }
 }
 
 export async function LocationSection({
@@ -37,16 +99,15 @@ export async function LocationSection({
         {!coords ? (
           <p className="text-muted-foreground text-sm">{t.location.noForecastLocation}</p>
         ) : weather ? (
-          <div className="flex items-center gap-4 rounded-xl border border-primary/20 bg-accent px-4 py-3">
-            <span className="text-2xl font-semibold tabular-nums">
-              {Math.round(weather.temperatureMin)}°–{Math.round(weather.temperatureMax)}°C
+          <div className="flex items-center gap-2">
+            <WeatherIcon
+              code={weather.weatherCode}
+              className="size-6 text-muted-foreground"
+              label={description ?? undefined}
+            />
+            <span className="text-xl font-semibold tabular-nums">
+              {Math.round(weather.temperatureMax)}°C
             </span>
-            <div className="flex flex-col text-sm">
-              <span>{description}</span>
-              <span className="text-muted-foreground">
-                {t.location.rainChance(weather.precipitationProbability)}
-              </span>
-            </div>
           </div>
         ) : (
           <p className="text-muted-foreground text-sm">{t.location.noForecastYet}</p>
@@ -71,16 +132,7 @@ export async function LocationSection({
           {t.location.openInGoogleMaps}
         </Button>
         {coords ? (
-          <iframe
-            title="Party location map"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-              coords.longitude - 0.01
-            }%2C${coords.latitude - 0.01}%2C${coords.longitude + 0.01}%2C${
-              coords.latitude + 0.01
-            }&marker=${coords.latitude}%2C${coords.longitude}`}
-            className="h-56 w-full rounded-xl border"
-            loading="lazy"
-          />
+          <LocationMap coords={coords} />
         ) : (
           <p className="text-muted-foreground text-sm">{t.location.noMapLocation}</p>
         )}

@@ -205,7 +205,8 @@ round.
   shareable URL, no registration.
 - **Guests** — enter name, join, edit own info.
 - **Driver Coordination** — driving / available seats / needs a ride.
-- **Weather** — forecast, temperature, rain probability for the party date.
+- **Weather** — forecast for the party date, shown compactly as a condition
+  icon + single temperature (rain probability is not shown in this display).
 - **Maps** — embedded map of the meeting location.
 
 ---

@@ -82,15 +82,24 @@ export function RideSection({
       {!stored ? (
         <p className="text-muted-foreground text-sm">{t.rides.joinPrompt}</p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <div className="grid grid-cols-3 gap-2">
-            {(["driving", "needsRide", "none"] as const).map((status) => (
+            <Button
+              type="button"
+              variant={me && statusOf(me) === "driving" ? "default" : "outline"}
+              disabled={busy}
+              onClick={() => updateStatus("driving", 1)}
+              className="h-11 text-sm"
+            >
+              {statusLabels.driving}
+            </Button>
+            {(["needsRide", "none"] as const).map((status) => (
               <Button
                 key={status}
                 type="button"
                 variant={me && statusOf(me) === status ? "default" : "outline"}
                 disabled={busy}
-                onClick={() => updateStatus(status, status === "driving" ? 1 : undefined)}
+                onClick={() => updateStatus(status)}
                 className="h-11 text-sm"
               >
                 {statusLabels[status]}
@@ -99,35 +108,26 @@ export function RideSection({
           </div>
 
           {me && statusOf(me) === "driving" && (
-            <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-accent px-3 py-2">
-              <span className="text-base">{t.rides.freeSeats}</span>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={busy || (me.seatsFree ?? 0) <= 0}
-                  onClick={() => updateStatus("driving", (me.seatsFree ?? 0) - 1)}
-                  className="h-11 w-11"
-                  aria-label={t.rides.fewerSeatsAria}
-                >
-                  <Minus className="size-4" />
-                </Button>
-                <span className="w-4 text-center text-base tabular-nums">
-                  {me.seatsFree ?? 0}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  disabled={busy}
-                  onClick={() => updateStatus("driving", (me.seatsFree ?? 0) + 1)}
-                  className="h-11 w-11"
-                  aria-label={t.rides.moreSeatsAria}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </div>
+            <div className="flex h-11 items-center justify-between rounded-md border border-primary/30 bg-accent px-2">
+              <button
+                type="button"
+                disabled={busy || (me.seatsFree ?? 0) <= 0}
+                onClick={() => updateStatus("driving", (me.seatsFree ?? 0) - 1)}
+                className="flex h-11 w-11 items-center justify-center disabled:opacity-40"
+                aria-label={t.rides.fewerSeatsAria}
+              >
+                <Minus className="size-4" />
+              </button>
+              <span className="text-base tabular-nums">{me.seatsFree ?? 0}</span>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => updateStatus("driving", (me.seatsFree ?? 0) + 1)}
+                className="flex h-11 w-11 items-center justify-center disabled:opacity-40"
+                aria-label={t.rides.moreSeatsAria}
+              >
+                <Plus className="size-4" />
+              </button>
             </div>
           )}
         </div>
