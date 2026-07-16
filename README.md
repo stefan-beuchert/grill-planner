@@ -65,8 +65,11 @@ docker compose exec app npx playwright install --with-deps chromium
 
 ## CI
 
-`.github/workflows/ci.yml` runs lint, typecheck, and the unit test suite
-(against an ephemeral Postgres service container) on every push to `main`
-and every pull request. The Playwright e2e test isn't wired into CI yet —
-it needs a running dev server and a browser install, both heavier than
-this first pass covers.
+`.github/workflows/ci.yml` runs two jobs in parallel on every push to
+`main` and every pull request, each against its own ephemeral Postgres
+service container: `test` (lint, typecheck, unit test suite) and `e2e`
+(builds the app and runs the Playwright golden-path test against it). CI
+builds and starts its own server for the e2e job — the manual
+`docker compose exec app npm run test:e2e` above (against your local dev
+server) is still how you run it locally; nothing about that workflow
+changes.

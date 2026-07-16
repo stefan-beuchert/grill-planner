@@ -384,10 +384,23 @@ Playwright's browser binary lives in its own named volume
 `npx playwright install --with-deps chromium` per environment (see
 README.md) rather than bloating every image build.
 
-**CI** (`.github/workflows/ci.yml`) runs lint, typecheck (`npm run
-typecheck`, a plain `tsc --noEmit`), and the unit test suite against an
-ephemeral `postgres:16-alpine` service container on every push to `main`
-and every pull request — mirroring `docker-compose.yml`'s `db` service,
-not a mock. The Playwright e2e test isn't in CI yet (it needs a running
-dev server plus a browser install, both heavier than this first pass);
-running it remains a manual, local step.
+**CI** (`.github/workflows/ci.yml`) runs two jobs in parallel on every push
+to `main` and every pull request, each against its own ephemeral
+`postgres:16-alpine` service container (mirroring `docker-compose.yml`'s
+`db` service, not a mock):
+
+- `test` — lint, typecheck (`npm run typecheck`, a plain `tsc --noEmit`),
+  and the unit test suite, against a `grillplanner_test` database.
+- `e2e` — builds the app (`npm run build`, which runs `prisma migrate
+  deploy`), installs the Chromium browser binary (cached across runs, keyed
+  on the lockfile), and runs the Playwright golden-path test against a
+  `npm run start`\-served build (`playwright.config.ts`'s `webServer`
+  block), pointed at its own `grillplanner_e2e` database.
+
+They're split into separate jobs rather than one, both so they run in
+parallel and so the deterministic, fast checks in `test` aren't blocked on
+(or muddied by the flake potential of) a browser-driven test in `e2e`.
+Locally, `playwright.config.ts`'s `reuseExistingServer: !process.env.CI`
+means developers keep attaching the e2e test to an already-running
+`docker compose` dev server (see README.md) — only CI starts its own via
+`webServer`.
