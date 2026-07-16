@@ -51,6 +51,15 @@ turns into RPC-style POST endpoints under the hood. Every action re-checks
 authorization itself (see below); nothing relies on a prior page load having
 already verified anything.
 
+The one deliberate exception is `app/party/[slug]/calendar.ics/route.ts` — a
+plain `GET` route handler, not a Server Action, because a downloadable file
+with a specific `Content-Type`/`Content-Disposition` needs a real URL for an
+`<a href download>` to navigate to; a Server Action can't be linked to or
+downloaded from directly. It's read-only and unauthenticated (same "slug is
+the only authorization" trust model as the party page itself), so it doesn't
+reintroduce the REST-API concerns (auth-per-mutation, response-shape
+consistency) the "no API routes" rule exists to avoid.
+
 ---
 
 ## Data Model
@@ -77,6 +86,7 @@ A single grill party. `slug` is the unguessable public id used in the shareable 
 | `aiSummaryRecap` | `String?` | Cached AI Event Summary (see PRODUCT.md). Regenerated on demand, not automatically — these three fields are only ever written together. |
 | `aiSummaryOpenPoints` | `String[]` | @default([]) |
 | `aiSummaryGeneratedAt` | `DateTime?` | — |
+| `aiSummaryLocale` | `String?` | Locale the cached summary above was generated in — compared against the viewer's current locale to show a staleness notice (see PRODUCT.md). |
 | `createdAt` | `DateTime` | @default(now()) |
 | `updatedAt` | `DateTime` | @updatedAt |
 | `participants` | `Participant[]` | — |
@@ -305,6 +315,26 @@ Illustrates the general pattern (Server Component fetch → Client Component
 
 ---
 
+## Request flow: calendar export (`.ics` download)
+
+The one route in this app that isn't a page or a Server Action.
+
+1. `CalendarButton` (`components/party/calendar-button.tsx`, rendered from
+   `app/party/[slug]/page.tsx`) is a plain `<a href="/party/[slug]/calendar.ics"
+   download>` styled as a `Button` — no client-side JS needed to trigger it.
+2. `app/party/[slug]/calendar.ics/route.ts` (`GET`) looks up the party by
+   slug, 404s if it doesn't exist, and calls `buildPartyIcs` (`lib/ics.ts`) —
+   a pure string-builder, unit-tested in `lib/ics.test.ts`, with no real
+   timezone conversion (see `lib/party-datetime.ts`'s "floating wall-clock
+   time faked as UTC" note — the exported event keeps the same digits every
+   viewer already sees on-screen).
+3. The response is returned with `Content-Type: text/calendar` and
+   `Content-Disposition: attachment`, which makes the browser download it
+   directly rather than navigate to it — no page render, no Server Action
+   round-trip.
+
+---
+
 ## Error handling
 
 Two layers, for two different failure modes:
@@ -384,10 +414,23 @@ Playwright's browser binary lives in its own named volume
 `npx playwright install --with-deps chromium` per environment (see
 README.md) rather than bloating every image build.
 
-**CI** (`.github/workflows/ci.yml`) runs lint, typecheck (`npm run
-typecheck`, a plain `tsc --noEmit`), and the unit test suite against an
-ephemeral `postgres:16-alpine` service container on every push to `main`
-and every pull request — mirroring `docker-compose.yml`'s `db` service,
-not a mock. The Playwright e2e test isn't in CI yet (it needs a running
-dev server plus a browser install, both heavier than this first pass);
-running it remains a manual, local step.
+**CI** (`.github/workflows/ci.yml`) runs two jobs in parallel on every push
+to `main` and every pull request, each against its own ephemeral
+`postgres:16-alpine` service container (mirroring `docker-compose.yml`'s
+`db` service, not a mock):
+
+- `test` — lint, typecheck (`npm run typecheck`, a plain `tsc --noEmit`),
+  and the unit test suite, against a `grillplanner_test` database.
+- `e2e` — builds the app (`npm run build`, which runs `prisma migrate
+  deploy`), installs the Chromium browser binary (cached across runs, keyed
+  on the lockfile), and runs the Playwright golden-path test against a
+  `npm run start`\-served build (`playwright.config.ts`'s `webServer`
+  block), pointed at its own `grillplanner_e2e` database.
+
+They're split into separate jobs rather than one, both so they run in
+parallel and so the deterministic, fast checks in `test` aren't blocked on
+(or muddied by the flake potential of) a browser-driven test in `e2e`.
+Locally, `playwright.config.ts`'s `reuseExistingServer: !process.env.CI`
+means developers keep attaching the e2e test to an already-running
+`docker compose` dev server (see README.md) — only CI starts its own via
+`webServer`.

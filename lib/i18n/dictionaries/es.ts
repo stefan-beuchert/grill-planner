@@ -78,6 +78,14 @@ export const es: Dictionary = {
     copy: "Copiar link de invitación",
     copied: "¡Link copiado!",
   },
+  qrCode: {
+    button: "Mostrar código QR",
+    dialogTitle: "Escanea para unirte",
+    dialogHint: "Apunta la cámara del celular a este código para abrir la fiesta.",
+  },
+  calendar: {
+    addButton: "Agregar al calendario",
+  },
   participants: {
     heading: "Quién se apunta",
     empty: "Todavía nadie se ha unido.",
@@ -128,7 +136,6 @@ export const es: Dictionary = {
     driving: "Manejando",
     needsRide: "Necesita aventón",
     none: "Ninguno",
-    freeSeats: "Asientos libres",
     fewerSeatsAria: "Menos asientos",
     moreSeatsAria: "Más asientos",
     driverSeats: (name: string, seats: number) =>
@@ -150,6 +157,7 @@ export const es: Dictionary = {
     copyButton: "Copiar",
     copied: "¡Copiado!",
     generationFailed: "No se pudo generar el resumen. Intenta otra vez.",
+    staleNotice: "Este resumen puede estar en otro idioma",
   },
   admin: {
     heading: "Admin",
@@ -189,8 +197,9 @@ export const es: Dictionary = {
     noForecastLocation: "No encontramos esta ubicación para el pronóstico.",
     noForecastYet: "El pronóstico todavía no está disponible — aparece como dos semanas antes de la fiesta.",
     noMapLocation: "No encontramos esta ubicación en el mapa.",
-    rainChance: (percent: number) => `${percent}% de probabilidad de lluvia`,
     openInGoogleMaps: "Abrir en Google Maps",
+    mapTapHint: "Toca para explorar el mapa",
+    mapTapHintAria: "Toca para activar el desplazamiento y el zoom del mapa",
     weatherCodeUnknown: "Desconocido",
     weatherCodes: {
       0: "Cielo despejado",

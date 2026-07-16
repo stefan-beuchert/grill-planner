@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { HandPlatter, MapPin, Receipt, ShoppingCart, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { CopyLinkButton } from "@/components/party/copy-link-button";
+import { QrCodeButton } from "@/components/party/qr-code-button";
+import { CalendarButton } from "@/components/party/calendar-button";
 import { ParticipantsSection } from "@/components/party/participants-section";
 import { ThingsToBringSection } from "@/components/party/things-to-bring-section";
 import { RideSection } from "@/components/party/ride-section";
@@ -187,6 +189,7 @@ export default async function PartyPage({
               recap={party.aiSummaryRecap}
               openPoints={party.aiSummaryOpenPoints}
               generatedAt={party.aiSummaryGeneratedAt}
+              stale={party.aiSummaryLocale !== null && party.aiSummaryLocale !== locale}
             />
             <AdminPartyControls
               slug={party.slug}
@@ -210,18 +213,22 @@ export default async function PartyPage({
 
             <div className="flex flex-col gap-2">
               <CopyLinkButton />
+              <QrCodeButton />
+              <CalendarButton slug={party.slug} t={t} />
               <p className="text-muted-foreground text-center text-sm">{t.partyPage.shareHint}</p>
             </div>
           </TabsContent>
 
           <TabsContent value="location" className="animate-in fade-in flex flex-col gap-6 duration-200">
-            <LocationNote slug={party.slug} note={party.locationNote} />
+            <div className="flex flex-col gap-3 rounded-xl border p-3">
+              <LocationNote slug={party.slug} note={party.locationNote} />
+              <Suspense
+                fallback={<p className="text-muted-foreground text-sm">{t.partyPage.loadingLocation}</p>}
+              >
+                <LocationSection location={party.location} startsAt={party.startsAt} t={t} />
+              </Suspense>
+            </div>
             <RideSection slug={party.slug} participants={party.participants} />
-            <Suspense
-              fallback={<p className="text-muted-foreground text-sm">{t.partyPage.loadingLocation}</p>}
-            >
-              <LocationSection location={party.location} startsAt={party.startsAt} t={t} />
-            </Suspense>
           </TabsContent>
 
           <TabsContent value="shopping" className="animate-in fade-in duration-200">

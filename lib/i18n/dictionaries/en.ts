@@ -78,6 +78,14 @@ export const en: Dictionary = {
     copy: "Copy invite link",
     copied: "Link copied!",
   },
+  qrCode: {
+    button: "Show QR code",
+    dialogTitle: "Scan to join",
+    dialogHint: "Point a phone camera at this code to open the party.",
+  },
+  calendar: {
+    addButton: "Add to calendar",
+  },
   participants: {
     heading: "Who's coming",
     empty: "No one has joined yet.",
@@ -128,7 +136,6 @@ export const en: Dictionary = {
     driving: "Driving",
     needsRide: "Need a ride",
     none: "Neither",
-    freeSeats: "Free seats",
     fewerSeatsAria: "Fewer seats",
     moreSeatsAria: "More seats",
     driverSeats: (name: string, seats: number) =>
@@ -150,6 +157,7 @@ export const en: Dictionary = {
     copyButton: "Copy",
     copied: "Copied!",
     generationFailed: "Couldn't generate a summary. Please try again.",
+    staleNotice: "This summary may be in a different language",
   },
   admin: {
     heading: "Admin",
@@ -189,8 +197,9 @@ export const en: Dictionary = {
     noForecastLocation: "Couldn't find this location for a forecast.",
     noForecastYet: "Forecast isn't available yet — it shows up about two weeks before the party.",
     noMapLocation: "Couldn't find this location on the map.",
-    rainChance: (percent: number) => `${percent}% chance of rain`,
     openInGoogleMaps: "Open in Google Maps",
+    mapTapHint: "Tap to explore the map",
+    mapTapHintAria: "Tap to enable panning and zooming on the map",
     weatherCodeUnknown: "Unknown",
     weatherCodes: {
       0: "Clear sky",

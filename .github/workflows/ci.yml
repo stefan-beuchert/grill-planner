@@ -46,3 +46,78 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
+
+  # Separate job (not folded into `test` above) so the fast/deterministic
+  # checks (lint/typecheck/unit) aren't held hostage by a browser-driven
+  # test's flake potential, and so the two run in parallel rather than
+  # serially.
+  e2e:
+    runs-on: ubuntu-latest
+
+    # Own Postgres service + a distinctly-named database from the `test`
+    # job's `grillplanner_test`, to avoid any confusion about which job
+    # touches which data — this one runs a real built app against it via
+    # `npm run build` (which runs `prisma migrate deploy`), not Vitest.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: grillplanner_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 1s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # The e2e test drives the real running app (see
+      # tests/e2e/golden-path.spec.ts), so it needs DATABASE_URL/DIRECT_URL,
+      # not TEST_DATABASE_URL — mirrors docker-compose.yml's `app` service,
+      # which points both at the same dev Postgres connection string.
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/grillplanner_e2e
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/grillplanner_e2e
+      # `lib/anthropic.ts` constructs the Anthropic SDK client at module
+      # scope, which throws if the key is entirely absent from the
+      # environment — the golden-path test never exercises AI features, so
+      # this only needs to exist, not be valid.
+      ANTHROPIC_API_KEY: sk-ci-placeholder
+      # Matches the dev-only default in docker-compose.yml; the test never
+      # touches admin-gated routes, but keeping it set avoids surprises if
+      # that changes.
+      ADMIN_PASSCODE: "1234"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # postinstall runs `prisma generate` automatically.
+      - run: npm ci
+
+      # Builds the app (runs `prisma migrate deploy` first, applying
+      # migrations to the job's Postgres service) so playwright.config.ts's
+      # webServer can start it with a plain `npm run start` — no rebuilding
+      # inside the timed server-startup window.
+      - run: npm run build
+
+      # Caches the ~300MB Chromium binary keyed on the installed Playwright
+      # version (bumping @playwright/test invalidates it automatically).
+      # Doesn't cover install-deps' apt packages, but those install fast on
+      # the stock ubuntu-latest runner — not worth the complexity of
+      # switching this job to Playwright's own container image just to
+      # avoid them.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e

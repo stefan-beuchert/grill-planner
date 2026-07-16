@@ -76,6 +76,14 @@ export const de = {
     copy: "Einladungslink kopieren",
     copied: "Link kopiert!",
   },
+  qrCode: {
+    button: "QR-Code anzeigen",
+    dialogTitle: "Zum Beitreten scannen",
+    dialogHint: "Handykamera auf diesen Code richten, um die Party zu öffnen.",
+  },
+  calendar: {
+    addButton: "Zum Kalender hinzufügen",
+  },
   participants: {
     heading: "Wer kommt mit",
     empty: "Noch niemand ist beigetreten.",
@@ -127,7 +135,6 @@ export const de = {
     driving: "Ich fahre",
     needsRide: "Brauche Fahrt",
     none: "Weder noch",
-    freeSeats: "Freie Plätze",
     fewerSeatsAria: "Weniger Plätze",
     moreSeatsAria: "Mehr Plätze",
     driverSeats: (name: string, seats: number) =>
@@ -149,6 +156,7 @@ export const de = {
     copyButton: "Kopieren",
     copied: "Kopiert!",
     generationFailed: "Die Zusammenfassung konnte nicht erstellt werden. Bitte versuche es erneut.",
+    staleNotice: "Diese Zusammenfassung ist eventuell in einer anderen Sprache",
   },
   admin: {
     heading: "Admin",
@@ -190,8 +198,9 @@ export const de = {
     noForecastYet:
       "Die Vorhersage ist noch nicht verfügbar — sie erscheint etwa zwei Wochen vor der Party.",
     noMapLocation: "Dieser Ort konnte auf der Karte nicht gefunden werden.",
-    rainChance: (percent: number) => `${percent} % Regenwahrscheinlichkeit`,
     openInGoogleMaps: "In Google Maps öffnen",
+    mapTapHint: "Zum Erkunden der Karte tippen",
+    mapTapHintAria: "Tippen, um Verschieben und Zoomen der Karte zu aktivieren",
     weatherCodeUnknown: "Unbekannt",
     weatherCodes: {
       0: "Klarer Himmel",
