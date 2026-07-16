@@ -137,6 +137,7 @@ export async function generateAiSummary(
         aiSummaryRecap: response.parsed_output.recap,
         aiSummaryOpenPoints: response.parsed_output.openPoints,
         aiSummaryGeneratedAt: new Date(),
+        aiSummaryLocale: locale,
       },
     });
   } catch (err) {

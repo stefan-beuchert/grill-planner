@@ -76,6 +76,14 @@ export const de = {
     copy: "Einladungslink kopieren",
     copied: "Link kopiert!",
   },
+  qrCode: {
+    button: "QR-Code anzeigen",
+    dialogTitle: "Zum Beitreten scannen",
+    dialogHint: "Handykamera auf diesen Code richten, um die Party zu öffnen.",
+  },
+  calendar: {
+    addButton: "Zum Kalender hinzufügen",
+  },
   participants: {
     heading: "Wer kommt mit",
     empty: "Noch niemand ist beigetreten.",
@@ -149,6 +157,7 @@ export const de = {
     copyButton: "Kopieren",
     copied: "Kopiert!",
     generationFailed: "Die Zusammenfassung konnte nicht erstellt werden. Bitte versuche es erneut.",
+    staleNotice: "Diese Zusammenfassung ist eventuell in einer anderen Sprache",
   },
   admin: {
     heading: "Admin",

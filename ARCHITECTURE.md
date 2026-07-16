@@ -51,6 +51,15 @@ turns into RPC-style POST endpoints under the hood. Every action re-checks
 authorization itself (see below); nothing relies on a prior page load having
 already verified anything.
 
+The one deliberate exception is `app/party/[slug]/calendar.ics/route.ts` — a
+plain `GET` route handler, not a Server Action, because a downloadable file
+with a specific `Content-Type`/`Content-Disposition` needs a real URL for an
+`<a href download>` to navigate to; a Server Action can't be linked to or
+downloaded from directly. It's read-only and unauthenticated (same "slug is
+the only authorization" trust model as the party page itself), so it doesn't
+reintroduce the REST-API concerns (auth-per-mutation, response-shape
+consistency) the "no API routes" rule exists to avoid.
+
 ---
 
 ## Data Model
@@ -77,6 +86,7 @@ A single grill party. `slug` is the unguessable public id used in the shareable 
 | `aiSummaryRecap` | `String?` | Cached AI Event Summary (see PRODUCT.md). Regenerated on demand, not automatically — these three fields are only ever written together. |
 | `aiSummaryOpenPoints` | `String[]` | @default([]) |
 | `aiSummaryGeneratedAt` | `DateTime?` | — |
+| `aiSummaryLocale` | `String?` | Locale the cached summary above was generated in — compared against the viewer's current locale to show a staleness notice (see PRODUCT.md). |
 | `createdAt` | `DateTime` | @default(now()) |
 | `updatedAt` | `DateTime` | @updatedAt |
 | `participants` | `Participant[]` | — |
@@ -302,6 +312,26 @@ Illustrates the general pattern (Server Component fetch → Client Component
 4. The client calls `router.refresh()`, which re-runs the Server Component
    fetch and re-renders with fresh data — no client-side cache to
    invalidate manually.
+
+---
+
+## Request flow: calendar export (`.ics` download)
+
+The one route in this app that isn't a page or a Server Action.
+
+1. `CalendarButton` (`components/party/calendar-button.tsx`, rendered from
+   `app/party/[slug]/page.tsx`) is a plain `<a href="/party/[slug]/calendar.ics"
+   download>` styled as a `Button` — no client-side JS needed to trigger it.
+2. `app/party/[slug]/calendar.ics/route.ts` (`GET`) looks up the party by
+   slug, 404s if it doesn't exist, and calls `buildPartyIcs` (`lib/ics.ts`) —
+   a pure string-builder, unit-tested in `lib/ics.test.ts`, with no real
+   timezone conversion (see `lib/party-datetime.ts`'s "floating wall-clock
+   time faked as UTC" note — the exported event keeps the same digits every
+   viewer already sees on-screen).
+3. The response is returned with `Content-Type: text/calendar` and
+   `Content-Disposition: attachment`, which makes the browser download it
+   directly rather than navigate to it — no page render, no Server Action
+   round-trip.
 
 ---
 

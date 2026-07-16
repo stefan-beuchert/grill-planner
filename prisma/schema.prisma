@@ -57,6 +57,9 @@ model Party {
   aiSummaryRecap       String?
   aiSummaryOpenPoints  String[]  @default([])
   aiSummaryGeneratedAt DateTime?
+  /// Locale the cached summary above was generated in — compared against the
+  /// viewer's current locale to show a staleness notice (see PRODUCT.md).
+  aiSummaryLocale      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

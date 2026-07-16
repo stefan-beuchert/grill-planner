@@ -227,11 +227,22 @@ already sits at 5 tabs and PRODUCT.md's own principles argue against
 growing that count for something that isn't a distinct planning task.
 
 **Trigger and caching:** a manual "Generate" / "Refresh" button, not
-automatic generation on tab view. The result is cached — new `Party`
-fields `aiSummary` (text) and `aiSummaryGeneratedAt` (timestamp) — and
-shown with a "generated X ago" indicator. Regenerating is a conscious
-action by whoever taps it, available to any participant, same as every
-other open-collaboration action in this app.
+automatic generation on tab view. The result is cached — `Party` fields
+`aiSummaryRecap` (text), `aiSummaryOpenPoints` (string list), and
+`aiSummaryGeneratedAt` (timestamp), always written together — and shown
+with a "generated X ago" indicator. Regenerating is a conscious action by
+whoever taps it, available to any participant, same as every other
+open-collaboration action in this app.
+
+**Language staleness notice.** The summary is generated in whatever locale
+was active in the generating viewer's browser at the time, cached in
+`aiSummaryLocale`. If a later viewer's current locale doesn't match, a
+passive notice appears next to the "generated X ago" indicator ("this
+summary may be in a different language") — no auto-regeneration, keeping
+regeneration an explicit, conscious action like everywhere else in this
+feature. The four freeform party note fields have the same underlying
+language-staleness problem but are out of scope for this notice: they're
+raw user-typed text with no "regenerate" concept.
 
 **Model:** `claude-haiku-4-5`, called server-side from a Server Action,
 non-streaming (output is short). Cheapest tier; upgrading to a stronger

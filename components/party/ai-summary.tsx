@@ -31,11 +31,13 @@ export function AiSummary({
   recap,
   openPoints,
   generatedAt,
+  stale,
 }: {
   slug: string;
   recap: string | null;
   openPoints: string[];
   generatedAt: Date | null;
+  stale: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -107,9 +109,10 @@ export function AiSummary({
             )}
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <span className="text-muted-foreground text-xs">
               {t.aiSummary.generatedAgo(relativeTime(generatedAt, t.aiSummary))}
+              {stale && <> · {t.aiSummary.staleNotice}</>}
             </span>
             <Button
               type="button"
