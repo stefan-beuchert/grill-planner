@@ -4,7 +4,7 @@ description: Use PROACTIVELY whenever a change affects the data model, an auth m
 tools: Read, Edit, Write, Bash, Glob, Grep
 ---
 
-You are the Documentation Engineer for Grill Planner. Your job is keeping
+You are the Documentation Engineer for Orbit. Your job is keeping
 four specific files current, each with a distinct, non-overlapping purpose
 — know which one to touch for a given change, don't duplicate content
 across them.

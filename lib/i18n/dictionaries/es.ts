@@ -33,7 +33,7 @@ export const es: Dictionary = {
   },
   landing: {
     tagline:
-      "Organiza una carne asada con tus cuates en un minuto. Sin registro — te llega el link para compartir al toque.",
+      "Organiza un evento con tus cuates en un minuto. Sin registro — te llega el link para compartir al toque.",
   },
   partyWelcome: {
     joinSubmit: "Únete a la fiesta",
@@ -41,7 +41,7 @@ export const es: Dictionary = {
   },
   createPartyForm: {
     titleLabel: "Nombre de la fiesta",
-    titlePlaceholder: "Carne asada de verano",
+    titlePlaceholder: "Reunión de verano",
     titleRequired: "Ponle nombre a la fiesta",
     dateLabel: "Fecha",
     dateRequired: "Elige una fecha",
@@ -114,7 +114,7 @@ export const es: Dictionary = {
     addNote: "Agregar nota",
     editNote: "Editar nota",
     notePlaceholder:
-      "ej. esta vez cada quien asa su carne, nomás cooperen para bebidas/pan/salsas",
+      "ej. esta vez cada quien trae su propia comida, nomás cooperen para bebidas/botanas",
   },
   thingsToBring: {
     heading: "Lo que cada quien lleva",

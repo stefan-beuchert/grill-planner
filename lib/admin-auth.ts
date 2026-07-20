@@ -9,7 +9,7 @@ const COOKIE_NAME = "admin_session";
 
 function sessionToken(): string {
   return createHmac("sha256", process.env.ADMIN_PASSCODE ?? "")
-    .update("grill-planner-admin")
+    .update("orbit-admin")
     .digest("hex");
 }
 

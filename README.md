@@ -1,7 +1,7 @@
-# Grill Planner
+# Orbit
 
-A small, mobile-first app for organizing a BBQ with friends — no accounts,
-just a shareable link. See [CLAUDE.md](./CLAUDE.md) for stack/conventions,
+A small, mobile-first app for organizing an event with friends — no
+accounts, just a shareable link. See [CLAUDE.md](./CLAUDE.md) for stack/conventions,
 [PRODUCT.md](./PRODUCT.md) for the product spec, and
 [ARCHITECTURE.md](./ARCHITECTURE.md) for how it's built.
 
@@ -48,7 +48,7 @@ live.
 
 ```bash
 docker compose exec app npm run test       # unit tests (Vitest) — real
-                                            # queries against grillplanner_test,
+                                            # queries against orbit_test,
                                             # a separate database (see
                                             # docker-compose.yml), never dev data
 docker compose exec app npm run test:e2e   # e2e smoke test (Playwright), against

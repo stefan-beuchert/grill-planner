@@ -7,9 +7,9 @@ export type StoredOrganizer = {
   organizerToken: string;
 };
 
-const STORAGE_EVENT = "grill-planner:organizer-storage";
+const STORAGE_EVENT = "orbit:organizer-storage";
 
-const storageKey = (slug: string) => `grill-planner:organizer:${slug}`;
+const storageKey = (slug: string) => `orbit:organizer:${slug}`;
 
 export function getStoredOrganizerSnapshot(slug: string): string | null {
   return window.localStorage.getItem(storageKey(slug));

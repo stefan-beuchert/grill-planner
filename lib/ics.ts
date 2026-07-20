@@ -89,10 +89,10 @@ export function buildPartyIcs(party: {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Grill Planner//grill-planner//EN",
+    "PRODID:-//Orbit//orbit-event-planner//EN",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
-    `UID:${party.id}@grill-planner`,
+    `UID:${party.id}@orbit`,
     `DTSTAMP:${dtStamp}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,

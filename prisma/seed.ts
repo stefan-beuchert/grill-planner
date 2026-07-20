@@ -14,10 +14,10 @@ async function main() {
   const party = await prisma.party.create({
     data: {
       slug: SLUG,
-      title: "Grillplaner Testparty",
+      title: "Orbit Testparty",
       startsAt: new Date("2026-08-15T17:00:00Z"),
       location: "Volkspark Friedrichshain, Berlin",
-      notes: "Bitte pünktlich kommen, der Grill wird um 17 Uhr angezündet.",
+      notes: "Bitte pünktlich kommen, wir starten um 17 Uhr.",
       locationNote: "Eingang an der Danziger Straße, wir sind auf der großen Wiese.",
       note: "Jeder zahlt anteilig mit, Bar oder PayPal.",
       bringNote: "Bitte eigenes Geschirr mitbringen, wir haben nicht genug für alle.",
@@ -93,7 +93,7 @@ async function main() {
         partyId: party.id,
         listType: "SHARED_PURCHASE",
         category: "OTHER",
-        name: "Kohle",
+        name: "Deko",
         purchased: true,
         purchasedByParticipantId: ben.id,
         contributions: { create: { participantId: ben.id, quantity: 1 } },

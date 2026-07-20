@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 const METADATA_BY_LOCALE: Record<Locale, Metadata> = {
-  de: { title: "Grill Planner", description: "Plane ein Grillfest mit Freunden — kein Konto nötig." },
-  en: { title: "Grill Planner", description: "Plan a BBQ with friends — no account needed." },
-  es: { title: "Grill Planner", description: "Organiza una carne asada con tus cuates — sin registro." },
+  de: { title: "Orbit", description: "Plane ein Event mit Freunden — kein Konto nötig." },
+  en: { title: "Orbit", description: "Plan an event with friends — no account needed." },
+  es: { title: "Orbit", description: "Organiza un evento con tus cuates — sin registro." },
 };
 
 export async function generateMetadata(): Promise<Metadata> {

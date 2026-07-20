@@ -1,4 +1,4 @@
-# Grill Planner — Product Vision (v6 shipped)
+# Orbit — Product Vision (v6 shipped)
 
 Version 1 taught us something the original spec didn't anticipate: a BBQ has
 two fundamentally different kinds of "stuff" — things the group needs to buy
@@ -7,9 +7,9 @@ explicit and rebuilds Purchases/Drinks/Food around it.
 
 ## Product Principles
 
-- The Grill Planner is designed for organizing one-time BBQ events with up
-  to 20 participants. This is a rough design target, not a hard-coded or
-  enforced limit.
+- Orbit is designed for organizing one-time events with up to 20
+  participants. This is a rough design target, not a hard-coded or enforced
+  limit.
 - The application is optimized for mobile usage.
 - Users should never need to scroll through long pages.
 - Each tab groups one closely related set of planning tasks (e.g. Location
@@ -104,7 +104,7 @@ does.
 Each party has one optional, freely-editable **note** attached to this tab —
 plain text, set by whoever, visible to everyone. This exists for context
 that changes what "shared" even means for that party, e.g. "we're each
-grilling our own meat this time, only chip in for drinks/bread/sauces." It's
+bringing our own food this time, only chip in for drinks/snacks." It's
 informational only; it doesn't restrict what categories or items can be
 added.
 
@@ -214,7 +214,8 @@ round.
 ## AI Event Summary (shipped in v3)
 
 **Purpose.** This isn't a dashboard feature — it's a specific bet on a group
-dynamic. In group chats, obvious open points ("nobody's bringing a grill")
+dynamic. In group chats, obvious open points ("nobody's signed up for
+drinks")
 often go unaddressed even though everyone can see them, because raising it
 means becoming "the organizer" or "the nag." The hope is that a neutral,
 machine-generated observation removes that social cost — nobody has to be
@@ -261,7 +262,7 @@ settlement data (who paid for what, computed net balances simplified into
 1. A short general recap of the plan (who's coming, what's covered).
 2. A distinct **"Open Points"** section — the actual point of the
    feature. Each item is phrased around the missing *thing*, never around
-   who hasn't acted: "No one has signed up to bring a grill yet," not
+   who hasn't acted: "No one has signed up to bring drinks yet," not
    "Tom hasn't brought anything." This is load-bearing for the whole
    premise — naming a person reintroduces exactly the finger-pointing
    dynamic the feature exists to avoid, so contributor data may inform the

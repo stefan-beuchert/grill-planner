@@ -25,7 +25,7 @@ describe("buildPartyIcs", () => {
 
   it("derives a stable UID from the party id", () => {
     const ics = buildPartyIcs(baseParty);
-    expect(ics).toContain("UID:party123@grill-planner\r\n");
+    expect(ics).toContain("UID:party123@orbit\r\n");
   });
 
   it("emits DTSTART as a floating local time (no trailing Z), reusing startsAt's UTC-stored digits with no timezone conversion", () => {
@@ -97,7 +97,7 @@ describe("buildPartyIcs", () => {
   it("produces a different UID for a different party id", () => {
     const icsA = buildPartyIcs(baseParty);
     const icsB = buildPartyIcs({ ...baseParty, id: "otherparty" });
-    expect(icsA).toContain("UID:party123@grill-planner");
-    expect(icsB).toContain("UID:otherparty@grill-planner");
+    expect(icsA).toContain("UID:party123@orbit");
+    expect(icsB).toContain("UID:otherparty@orbit");
   });
 });

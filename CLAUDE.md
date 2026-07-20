@@ -2,13 +2,13 @@
 
 ## Project
 
-This project is called **Grill Planner**.
+This project is called **Orbit**.
 
-It is a small web application for organizing private BBQ/grill parties.
+It is a small web application for organizing private events.
 
-The goal is not to build a generic event management platform. It should solve one specific problem really well:
+The goal is not to build a sprawling, do-everything platform. It should solve one specific problem really well:
 
-> Organize a grill party with friends as easily as possible.
+> Organize an event with friends as easily as possible.
 
 The application should be modern, fast, responsive and fun to use.
 
@@ -143,10 +143,10 @@ Participants can
 
 Examples:
 
-- Steak
-- Sausage
-- Veggie Burger
-- Halloumi
+- Pizza
+- Salad
+- Veggie Skewers
+- Cheese Platter
 
 ---
 
@@ -426,7 +426,7 @@ This project exists to:
 - learn modern full-stack development
 - learn AI-assisted software engineering
 - build something people will actually use
-- provide an excellent mobile experience for organizing a BBQ with friends
+- provide an excellent mobile experience for organizing an event with friends
 
 Prioritize developer experience, mobile usability and code quality over feature count.
 
