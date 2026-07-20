@@ -33,7 +33,7 @@ export const en: Dictionary = {
   },
   landing: {
     tagline:
-      "Plan a BBQ with friends in a minute. No account needed — you get a link to share right after.",
+      "Plan an event with friends in a minute. No account needed — you get a link to share right after.",
   },
   partyWelcome: {
     joinSubmit: "Join the party",
@@ -41,7 +41,7 @@ export const en: Dictionary = {
   },
   createPartyForm: {
     titleLabel: "Party name",
-    titlePlaceholder: "Summer BBQ",
+    titlePlaceholder: "Summer Get-Together",
     titleRequired: "Give the party a name",
     dateLabel: "Date",
     dateRequired: "Pick a date",
@@ -114,7 +114,7 @@ export const en: Dictionary = {
     addNote: "Add a note",
     editNote: "Edit note",
     notePlaceholder:
-      "e.g. everyone grills their own meat this time, just chip in for drinks/bread/sauces",
+      "e.g. everyone brings their own food this time, just chip in for drinks/snacks",
   },
   thingsToBring: {
     heading: "Things People Bring",

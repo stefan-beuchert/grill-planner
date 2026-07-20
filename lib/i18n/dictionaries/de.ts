@@ -31,7 +31,7 @@ export const de = {
   },
   landing: {
     tagline:
-      "Plane ein Grillfest mit Freunden in einer Minute. Kein Konto nötig — du bekommst danach einen Link zum Teilen.",
+      "Plane ein Event mit Freunden in einer Minute. Kein Konto nötig — du bekommst danach einen Link zum Teilen.",
   },
   partyWelcome: {
     joinSubmit: "Der Party beitreten",
@@ -39,7 +39,7 @@ export const de = {
   },
   createPartyForm: {
     titleLabel: "Name der Party",
-    titlePlaceholder: "Sommergrillen",
+    titlePlaceholder: "Sommertreffen",
     titleRequired: "Gib der Party einen Namen",
     dateLabel: "Datum",
     dateRequired: "Wähle ein Datum",
@@ -112,7 +112,7 @@ export const de = {
     addNote: "Notiz hinzufügen",
     editNote: "Notiz bearbeiten",
     notePlaceholder:
-      "z. B. dieses Mal grillt jeder sein eigenes Fleisch, steuert nur bei Getränken/Brot/Soßen bei",
+      "z. B. dieses Mal bringt jeder sein eigenes Essen mit, steuert nur bei Getränken/Snacks bei",
   },
   thingsToBring: {
     heading: "Was mitgebracht wird",

@@ -12,9 +12,9 @@ export type StoredParticipant = {
   editToken: string;
 };
 
-const STORAGE_EVENT = "grill-planner:participant-storage";
+const STORAGE_EVENT = "orbit:participant-storage";
 
-const storageKey = (slug: string) => `grill-planner:participant:${slug}`;
+const storageKey = (slug: string) => `orbit:participant:${slug}`;
 
 export function getStoredParticipantSnapshot(slug: string): string | null {
   return window.localStorage.getItem(storageKey(slug));

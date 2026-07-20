@@ -7,10 +7,10 @@ services:
       # Local dev always talks to the `db` service below, never Supabase.
       # Supabase connection strings only matter for the Vercel deployment
       # (see .env.example) and are set there as project env vars.
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/grillplanner
-      DIRECT_URL: postgresql://postgres:postgres@db:5432/grillplanner
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/orbit
+      DIRECT_URL: postgresql://postgres:postgres@db:5432/orbit
       # Separate database so `npm run test` never touches real dev data.
-      TEST_DATABASE_URL: postgresql://postgres:postgres@db:5432/grillplanner_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@db:5432/orbit_test
       # Dev-only default. Production sets its own value as a Vercel env var.
       ADMIN_PASSCODE: "1234"
       # Real credential — pulled from a local, gitignored .env file (Docker
@@ -45,7 +45,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: grillplanner
+      POSTGRES_DB: orbit
     ports:
       - "5432:5432"
     volumes:

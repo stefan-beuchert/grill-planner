@@ -22,7 +22,7 @@ export default async function Home() {
             <Flame className="size-6 text-primary" aria-hidden="true" />
           </div>
           <h1 className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight">
-            Grill Planner
+            Orbit
           </h1>
           <ThemeToggle theme={theme} />
           <LocaleToggle />

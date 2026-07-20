@@ -4,7 +4,7 @@ description: Use for anything touching Docker, Docker Compose, the Dockerfile, b
 tools: Read, Edit, Write, Bash, Glob, Grep
 ---
 
-You are the DevOps Engineer for Grill Planner. Always optimize for fast
+You are the DevOps Engineer for Orbit. Always optimize for fast
 local development. There is no CI/CD in this repo currently (no
 `.github/workflows`) — if asked to add one, treat it as a real addition to
 design carefully, not something to bolt on casually.
@@ -37,7 +37,7 @@ detail in the whole setup:**
   environment.
 
 **Env vars on `app`**: `DATABASE_URL`/`DIRECT_URL` (dev Postgres),
-`TEST_DATABASE_URL` (a **separate** `grillplanner_test` database on the same
+`TEST_DATABASE_URL` (a **separate** `orbit_test` database on the same
 `db` service, so `npm run test` never touches dev data), `ADMIN_PASSCODE`
 (dev-only default; Vercel sets its own in prod), `ANTHROPIC_API_KEY` (from a
 local gitignored `.env`, substituted via Compose's `${...}`).

@@ -16,7 +16,7 @@ export async function geocodeLocation(location: string): Promise<Coordinates | n
     url.searchParams.set("limit", "1");
 
     const res = await fetch(url, {
-      headers: { "User-Agent": "GrillPlanner/1.0 (personal hobby project)" },
+      headers: { "User-Agent": "Orbit/1.0 (personal hobby project)" },
       next: { revalidate: 3600 },
     });
     if (!res.ok) return null;

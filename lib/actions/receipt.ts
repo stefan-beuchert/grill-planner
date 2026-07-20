@@ -26,7 +26,7 @@ const receiptExtractionSchema = z.object({
   ),
 });
 
-const SYSTEM_PROMPT = `You extract structured data from a photo of a grocery/shopping receipt for a private BBQ/grill party app. The photo may be low quality — glare, a faded thermal-printer receipt, an angled shot.
+const SYSTEM_PROMPT = `You extract structured data from a photo of a grocery/shopping receipt for a private event-planning app. The photo may be low quality — glare, a faded thermal-printer receipt, an angled shot.
 
 Return:
 1. "store": the store/merchant name if it's legible anywhere on the receipt, otherwise null. Do not guess.

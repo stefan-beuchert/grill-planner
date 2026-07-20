@@ -1,6 +1,6 @@
 # Architecture
 
-Technical reference for how Grill Planner is put together — *what* exists
+Technical reference for how Orbit is put together — *what* exists
 and *how the pieces connect*. For *why* the product works the way it does
 (the contribution-ledger rules, tab layout, design principles), see
 [PRODUCT.md](./PRODUCT.md). For stack choices and coding conventions, see
@@ -69,7 +69,7 @@ _This section is generated from `prisma/schema.prisma`'s own `///` doc-comments 
 
 ### Party
 
-A single grill party. `slug` is the unguessable public id used in the shareable URL — it is the only "authorization" a visitor needs.
+A single event. `slug` is the unguessable public id used in the shareable URL — it is the only "authorization" a visitor needs.
 
 | Field | Type | Notes |
 |---|---|---|
@@ -81,7 +81,7 @@ A single grill party. `slug` is the unguessable public id used in the shareable 
 | `location` | `String` | — |
 | `notes` | `String?` | General note shown on the Guests tab. Independent from `locationNote` below — the two are separate coordination contexts even though they share the same lightweight note-widget UI. |
 | `locationNote` | `String?` | Location/logistics-specific note shown on the Location tab (e.g. "parking is on the street, ring the doorbell twice"). Independent from `notes` above. |
-| `note` | `String?` | Optional freeform note shown on the merged Shopping List tab (v4: Shared Purchases and Shopping List are one screen again) — e.g. "everyone grills their own meat, just chip in for extras". |
+| `note` | `String?` | Optional freeform note shown on the merged Shopping List tab (v4: Shared Purchases and Shopping List are one screen again) — e.g. "everyone brings their own food, just chip in for extras". |
 | `bringNote` | `String?` | Optional freeform note shown on Things People Bring — a separate note from `note` above since it's a different coordination context (e.g. "please bring your own plates/cups"). |
 | `aiSummaryRecap` | `String?` | Cached AI Event Summary (see PRODUCT.md). Regenerated on demand, not automatically — these three fields are only ever written together. |
 | `aiSummaryOpenPoints` | `String[]` | @default([]) |
@@ -259,7 +259,7 @@ after creation.
 **Admin** (`lib/admin-auth.ts`): a single shared passcode
 (`ADMIN_PASSCODE` env var), not per-user, valid across *every* party.
 Logging in sets an HTTP-only cookie whose value is
-`HMAC-SHA256("grill-planner-admin", key=ADMIN_PASSCODE)` — a fixed,
+`HMAC-SHA256("orbit-admin", key=ADMIN_PASSCODE)` — a fixed,
 deterministic token that only someone who knows the passcode server-side
 could produce, so it can't be forged by setting an arbitrary cookie value
 in devtools, without needing a session table. `isAdmin()` recomputes the
@@ -389,7 +389,7 @@ break the two properties that matter most: the contribution-ledger math and
 the "can only edit/manage your own stuff" auth boundaries.
 
 **Unit tests** (`lib/**/*.test.ts`, run via Vitest — `npm run test`) hit a
-real Postgres database (`TEST_DATABASE_URL`, a separate `grillplanner_test`
+real Postgres database (`TEST_DATABASE_URL`, a separate `orbit_test`
 database on the same Postgres instance — see `docker-compose.yml`), not a
 mocked Prisma client, so they exercise real query behavior. `vitest.config.ts`
 overrides `DATABASE_URL` for the test process specifically so tests can never
@@ -420,12 +420,12 @@ to `main` and every pull request, each against its own ephemeral
 `db` service, not a mock):
 
 - `test` — lint, typecheck (`npm run typecheck`, a plain `tsc --noEmit`),
-  and the unit test suite, against a `grillplanner_test` database.
+  and the unit test suite, against an `orbit_test` database.
 - `e2e` — builds the app (`npm run build`, which runs `prisma migrate
   deploy`), installs the Chromium browser binary (cached across runs, keyed
   on the lockfile), and runs the Playwright golden-path test against a
   `npm run start`\-served build (`playwright.config.ts`'s `webServer`
-  block), pointed at its own `grillplanner_e2e` database.
+  block), pointed at its own `orbit_e2e` database.
 
 They're split into separate jobs rather than one, both so they run in
 parallel and so the deterministic, fast checks in `test` aren't blocked on

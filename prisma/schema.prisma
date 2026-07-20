@@ -1,4 +1,4 @@
-// Prisma schema for Grill Planner.
+// Prisma schema for Orbit.
 // Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -21,7 +21,7 @@ enum ItemCategory {
   OTHER
 }
 
-/// A single grill party. `slug` is the unguessable public id used in the
+/// A single event. `slug` is the unguessable public id used in the
 /// shareable URL — it is the only "authorization" a visitor needs.
 model Party {
   id             String   @id @default(cuid())
@@ -45,7 +45,7 @@ model Party {
   locationNote   String?
   /// Optional freeform note shown on the merged Shopping List tab (v4:
   /// Shared Purchases and Shopping List are one screen again) — e.g.
-  /// "everyone grills their own meat, just chip in for extras".
+  /// "everyone brings their own food, just chip in for extras".
   note           String?
   /// Optional freeform note shown on Things People Bring — a separate note
   /// from `note` above since it's a different coordination context (e.g.
