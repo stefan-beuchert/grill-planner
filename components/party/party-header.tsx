@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+import { Orbit } from "lucide-react";
 import { formatPartyDateTime } from "@/lib/party-datetime";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -19,7 +19,7 @@ export function PartyHeader({
   return (
     <div className="bg-primary sticky top-0 z-10 -mx-4 flex items-center gap-2.5 px-4 py-3">
       <div className="bg-primary-foreground/15 flex size-8 shrink-0 items-center justify-center rounded-full">
-        <Flame className="text-primary-foreground size-4" aria-hidden="true" />
+        <Orbit className="text-primary-foreground size-4" aria-hidden="true" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col leading-tight">
         <span className="text-primary-foreground truncate text-base font-bold tracking-tight">

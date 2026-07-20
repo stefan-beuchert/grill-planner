@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, MapPin } from "lucide-react";
+import { MapPin, Orbit } from "lucide-react";
 import { NameForm } from "@/components/party/name-form";
 import { useJoinParty } from "@/lib/hooks/use-join-party";
 import { formatPartyDateTime } from "@/lib/party-datetime";
@@ -33,7 +33,7 @@ export function PartyWelcome({
       />
       <div className="flex flex-col items-center gap-4">
         <div className="bg-primary flex size-14 shrink-0 items-center justify-center rounded-full">
-          <Flame className="text-primary-foreground size-7" aria-hidden="true" />
+          <Orbit className="text-primary-foreground size-7" aria-hidden="true" />
         </div>
         <div className="flex flex-col gap-1.5">
           <h1 className="text-3xl font-bold tracking-tight text-balance">{title}</h1>
