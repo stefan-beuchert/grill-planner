@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+import { Orbit } from "lucide-react";
 import { CreatePartyForm } from "@/components/party/create-party-form";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -19,7 +19,7 @@ export default async function Home() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
-            <Flame className="size-6 text-primary" aria-hidden="true" />
+            <Orbit className="size-6 text-primary" aria-hidden="true" />
           </div>
           <h1 className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight">
             Orbit
